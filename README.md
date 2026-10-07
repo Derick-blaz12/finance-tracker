@@ -26,10 +26,12 @@ while learning software engineering fundamentals.
 ## Run it
     python main.py
 
+| `tests/` | automated tests (pytest) |
+
 ## Run the tests
     pip install -r requirements.txt
     python -m pytest -q
-
+    
 Your data lives in `finance.db`, which is created on first run and is not
 part of the repository.
 
