@@ -1,0 +1,11 @@
+# Personal data: never commit
+*.db
+*.db-journal
+transactions.json
+transactions_old.json
+*.bak
+
+# Python clutter
+__pycache__/
+.pytest_cache/
+.venv/
