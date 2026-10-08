@@ -3,3 +3,5 @@ pytest
 flask
 
 flask-wtf
+
+gunicorn

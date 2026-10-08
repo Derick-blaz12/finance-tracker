@@ -11,6 +11,8 @@ from flask import (
 
 from flask_wtf.csrf import CSRFProtect
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 import calculations
 import database
 import filters
@@ -80,12 +82,16 @@ def valid_date_or_blank(text):
 
 def create_app(db_file=None, secret_key=None, csrf=True):
     app = Flask(__name__)
-    app.config["DB_FILE"] = db_file or database.DB_FILE
+    app.config["DB_FILE"] = db_file or os.environ.get("DATABASE_FILE") or database.DB_FILE
+    if os.environ.get("TRUSTED_PROXIES") == "1":
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     app.jinja_env.filters["naira"] = format_naira
 
     # The secret key signs the session cookie. Never commit a real one.
     secret_key = secret_key or os.environ.get("SECRET_KEY")
     if not secret_key:
+        if os.environ.get("PRODUCTION") == "1":
+            raise RuntimeError("SECRET_KEY must be set when PRODUCTION=1.")
         secret_key = secrets.token_hex(32)
         app.logger.warning(
             "SECRET_KEY is not set. Using a random key, so logins reset on restart."
