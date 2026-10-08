@@ -1,11 +1,16 @@
+import os
+import secrets
 import sqlite3
 from datetime import date, datetime
 
-from flask import Flask, abort, g, redirect, render_template, request, url_for
+from flask import (
+    Flask, abort, g, redirect, render_template, request, session, url_for,
+)
 
 import calculations
 import database
 import filters
+import users
 from input_helpers import CATEGORIES
 from models import Transaction
 from money import format_naira, parse_naira
@@ -59,16 +64,28 @@ def valid_date_or_blank(text):
     return text
 
 
-def create_app(db_file=None):
+def create_app(db_file=None, secret_key=None):
     app = Flask(__name__)
     app.config["DB_FILE"] = db_file or database.DB_FILE
     app.jinja_env.filters["naira"] = format_naira
+
+    # The secret key signs the session cookie. Never commit a real one.
+    secret_key = secret_key or os.environ.get("SECRET_KEY")
+    if not secret_key:
+        secret_key = secrets.token_hex(32)
+        app.logger.warning(
+            "SECRET_KEY is not set. Using a random key, so logins reset on restart."
+        )
+    app.config["SECRET_KEY"] = secret_key
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
     def get_db():
         """One connection per request, created on first use."""
         if "db" not in g:
             g.db = sqlite3.connect(app.config["DB_FILE"])
             database.create_table(g.db)
+            users.create_users_table(g.db)
         return g.db
 
     @app.teardown_appcontext
@@ -76,6 +93,58 @@ def create_app(db_file=None):
         db = g.pop("db", None)
         if db is not None:
             db.close()
+
+    @app.before_request
+    def load_user():
+        """Set g.user to (id, email) for a logged-in visitor, otherwise None."""
+        g.user = None
+        user_id = session.get("user_id")
+        if user_id is not None:
+            g.user = users.get_user_by_id(get_db(), user_id)
+            if g.user is None:          # account no longer exists
+                session.clear()
+
+    # ---------- accounts ----------
+
+    @app.route("/register", methods=["GET", "POST"])
+    def register():
+        if g.user:
+            return redirect(url_for("dashboard"))
+        if request.method == "POST":
+            email = request.form.get("email", "")
+            password = request.form.get("password", "")
+            try:
+                user_id = users.create_user(get_db(), email, password)
+            except ValueError as e:
+                return render_template("register.html", errors=[str(e)], email=email), 400
+            session.clear()
+            session["user_id"] = user_id
+            return redirect(url_for("dashboard"))
+        return render_template("register.html", errors=[], email="")
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if g.user:
+            return redirect(url_for("dashboard"))
+        if request.method == "POST":
+            email = request.form.get("email", "")
+            password = request.form.get("password", "")
+            user_id = users.authenticate(get_db(), email, password)
+            if user_id is None:
+                return render_template(
+                    "login.html", errors=["Incorrect email or password."], email=email,
+                ), 400
+            session.clear()
+            session["user_id"] = user_id
+            return redirect(url_for("dashboard"))
+        return render_template("login.html", errors=[], email="")
+
+    @app.route("/logout", methods=["POST"])
+    def logout():
+        session.clear()
+        return redirect(url_for("login"))
+
+    # ---------- pages ----------
 
     @app.route("/")
     def dashboard():

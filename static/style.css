@@ -166,3 +166,13 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, a:focus-visible {
   table.data .bar-cell { width: 100%; }
   .bar-track { width: 100%; }
 }
+
+/* ---------- account area and password fields ---------- */
+.field input[type="password"] {
+  width: 100%; padding: 0.55rem 0.65rem; border: 1px solid var(--border);
+  border-radius: var(--radius); font: inherit; background: #fff;
+}
+.nav-user {
+  color: var(--muted); font-size: 0.85rem; max-width: 180px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 0.4rem;
+}
