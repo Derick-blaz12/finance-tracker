@@ -1,6 +1,7 @@
 import os
 import secrets
 import sqlite3
+import ratelimit
 from datetime import date, datetime
 from functools import wraps
 
@@ -101,6 +102,7 @@ def create_app(db_file=None, secret_key=None, csrf=True):
         """One connection per request, created on first use."""
         if "db" not in g:
             g.db = sqlite3.connect(app.config["DB_FILE"])
+            ratelimit.create_table(g.db)
             database.create_table(g.db)
             users.create_users_table(g.db)
         return g.db
@@ -144,18 +146,32 @@ def create_app(db_file=None, secret_key=None, csrf=True):
         if g.user:
             return redirect(url_for("dashboard"))
         if request.method == "POST":
-            email = request.form.get("email", "")
+            email = users.normalize_email(request.form.get("email", ""))
             password = request.form.get("password", "")
-            user_id = users.authenticate(get_db(), email, password)
+            ip = request.remote_addr or "unknown"
+            db = get_db()
+
+            if ratelimit.is_locked_out(db, email, ip):
+                return render_template(
+                    "login.html",
+                    errors=["Too many failed attempts. Please wait 15 minutes and try again."],
+                    email=email,
+                ), 429
+
+            user_id = users.authenticate(db, email, password)
             if user_id is None:
+                ratelimit.record_failure(db, email, ip)
+                ratelimit.purge_old(db)
                 return render_template(
                     "login.html", errors=["Incorrect email or password."], email=email,
                 ), 400
+
+            ratelimit.clear_failures(db, email)
             session.clear()
             session["user_id"] = user_id
             return redirect(url_for("dashboard"))
         return render_template("login.html", errors=[], email="")
-
+    
     @app.route("/logout", methods=["POST"])
     def logout():
         session.clear()
