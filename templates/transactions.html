@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transactions - Finance Tracker</title>
+</head>
+<body>
+  <h1>Transactions</h1>
+  <p><a href="/">Dashboard</a></p>
+
+  {% if rows %}
+  <table border="1" cellpadding="6">
+    <tr>
+      <th>Date</th><th>Type</th><th>Description</th><th>Category</th><th>Amount</th>
+    </tr>
+    {% for id, t in rows %}
+    <tr>
+      <td>{{ t.date }}</td>
+      <td>{{ t.type }}</td>
+      <td>{{ t.description }}</td>
+      <td>{{ t.category or "" }}</td>
+      <td>{{ t.amount | naira }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>No transactions yet.</p>
+  {% endif %}
+</body>
+</html>

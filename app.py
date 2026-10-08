@@ -36,4 +36,11 @@ def create_app(db_file=None):
             balance=calculations.current_balance(transactions),
         )
 
+    @app.route("/transactions")
+    def transactions_page():
+        rows = database.get_all_transactions(get_db())
+        # newest date first; ties broken by id so the order is stable
+        rows.sort(key=lambda row: (row[1].date, row[0]), reverse=True)
+        return render_template("transactions.html", rows=rows)
+
     return app

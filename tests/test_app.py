@@ -31,3 +31,28 @@ def test_dashboard_with_empty_database(tmp_path):
     response = client.get("/")
     assert response.status_code == 200
     assert "₦0.00" in response.get_data(as_text=True)
+
+def test_transactions_page_lists_newest_first(tmp_path):
+    client = make_client(tmp_path, [
+        Transaction("income", "Salary", 5000000, "2026-10-01"),
+        Transaction("expense", "Rice", 500050, "2026-10-07", "Food"),
+    ])
+    html = client.get("/transactions").get_data(as_text=True)
+    assert html.index("Rice") < html.index("Salary")
+    assert "₦5,000.50" in html
+    assert "Food" in html
+
+
+def test_transactions_page_empty(tmp_path):
+    client = make_client(tmp_path)
+    html = client.get("/transactions").get_data(as_text=True)
+    assert "No transactions yet." in html
+
+
+def test_descriptions_are_escaped(tmp_path):
+    client = make_client(tmp_path, [
+        Transaction("expense", "<b>bold</b>", 100, "2026-10-01", "Other"),
+    ])
+    html = client.get("/transactions").get_data(as_text=True)
+    assert "<b>bold</b>" not in html
+    assert "&lt;b&gt;bold&lt;/b&gt;" in html
