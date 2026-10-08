@@ -3,12 +3,13 @@ from datetime import date, datetime
 
 from flask import Flask, abort, g, redirect, render_template, request, url_for
 
-import filters
 import calculations
 import database
+import filters
 from input_helpers import CATEGORIES
 from models import Transaction
 from money import format_naira, parse_naira
+
 
 def build_transaction_from_form(form):
     """Return (Transaction, []) if the form is valid, or (None, [error messages])."""
@@ -48,6 +49,7 @@ def build_transaction_from_form(form):
         return None, [str(e)]
     return t, []
 
+
 def valid_date_or_blank(text):
     """Return text if it is a real YYYY-MM-DD date, otherwise None."""
     try:
@@ -55,6 +57,7 @@ def valid_date_or_blank(text):
     except ValueError:
         return None
     return text
+
 
 def create_app(db_file=None):
     app = Flask(__name__)
@@ -83,6 +86,7 @@ def create_app(db_file=None):
             income=calculations.total_income(transactions),
             expenses=calculations.total_expenses(transactions),
             balance=calculations.current_balance(transactions),
+            months=calculations.calculate_monthly_summary(transactions)[:6],
         )
 
     @app.route("/transactions")
@@ -118,6 +122,7 @@ def create_app(db_file=None):
             filtering=bool(q or kind or start or end),
             q=q, kind=kind, start=start, end=end,
         )
+
     @app.route("/transactions/new", methods=["GET", "POST"])
     def new_transaction():
         if request.method == "POST":

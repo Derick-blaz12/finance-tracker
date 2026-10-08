@@ -15,15 +15,32 @@ def make_client(tmp_path, transactions=()):
     return create_app(db_file).test_client()
 
 
+def first_id(tmp_path):
+    conn = sqlite3.connect(str(tmp_path / "test_web.db"))
+    row_id = database.get_all_transactions(conn)[0][0]
+    conn.close()
+    return row_id
+
+
+def search_client(tmp_path):
+    return make_client(tmp_path, [
+        Transaction("income", "Salary", 5000000, "2026-10-01"),
+        Transaction("expense", "Rice", 500000, "2026-10-07", "Food"),
+        Transaction("expense", "Bus fare", 200000, "2026-09-28", "Transport"),
+    ])
+
+
+# ---------- dashboard ----------
+
 def test_dashboard_shows_totals(tmp_path):
     client = make_client(tmp_path, [
         Transaction("income", "Salary", 5000000, "2026-10-01"),
         Transaction("expense", "Rice", 500050, "2026-10-02", "Food"),
     ])
     html = client.get("/").get_data(as_text=True)
-    assert "₦50,000.00" in html    # income
-    assert "₦5,000.50" in html     # expenses
-    assert "₦44,999.50" in html    # balance
+    assert "₦50,000.00" in html
+    assert "₦5,000.50" in html
+    assert "₦44,999.50" in html
 
 
 def test_dashboard_with_empty_database(tmp_path):
@@ -31,6 +48,35 @@ def test_dashboard_with_empty_database(tmp_path):
     response = client.get("/")
     assert response.status_code == 200
     assert "₦0.00" in response.get_data(as_text=True)
+
+
+def test_dashboard_shows_monthly_summary_newest_first(tmp_path):
+    client = make_client(tmp_path, [
+        Transaction("income", "Salary", 5000000, "2026-10-01"),
+        Transaction("expense", "Rice", 500050, "2026-10-02", "Food"),
+        Transaction("expense", "Shoes", 2000000, "2026-09-28", "Shopping"),
+    ])
+    html = client.get("/").get_data(as_text=True)
+    assert html.index("2026-10") < html.index("2026-09")
+    assert "-₦20,000.00" in html
+
+
+def test_dashboard_monthly_section_empty(tmp_path):
+    html = make_client(tmp_path).get("/").get_data(as_text=True)
+    assert "No transactions yet." in html
+
+
+def test_dashboard_shows_only_six_recent_months(tmp_path):
+    client = make_client(tmp_path, [
+        Transaction("expense", f"Item {m}", 100, f"2026-{m:02d}-01", "Other")
+        for m in range(1, 8)
+    ])
+    html = client.get("/").get_data(as_text=True)
+    assert "2026-07" in html and "2026-02" in html
+    assert "2026-01" not in html
+
+
+# ---------- transactions list ----------
 
 def test_transactions_page_lists_newest_first(tmp_path):
     client = make_client(tmp_path, [
@@ -44,8 +90,7 @@ def test_transactions_page_lists_newest_first(tmp_path):
 
 
 def test_transactions_page_empty(tmp_path):
-    client = make_client(tmp_path)
-    html = client.get("/transactions").get_data(as_text=True)
+    html = make_client(tmp_path).get("/transactions").get_data(as_text=True)
     assert "No transactions yet." in html
 
 
@@ -57,9 +102,11 @@ def test_descriptions_are_escaped(tmp_path):
     assert "<b>bold</b>" not in html
     assert "&lt;b&gt;bold&lt;/b&gt;" in html
 
+
+# ---------- add form ----------
+
 def test_new_transaction_form_loads(tmp_path):
-    client = make_client(tmp_path)
-    response = client.get("/transactions/new")
+    response = make_client(tmp_path).get("/transactions/new")
     assert response.status_code == 200
     assert "Add transaction" in response.get_data(as_text=True)
 
@@ -70,10 +117,10 @@ def test_valid_expense_is_saved_in_kobo(tmp_path):
         "type": "expense", "description": "Rice", "category": "food",
         "amount": "1,234.56", "date": "2026-10-07",
     })
-    assert response.status_code == 302            # redirected after success
+    assert response.status_code == 302
     html = client.get("/transactions").get_data(as_text=True)
     assert "Rice" in html
-    assert "Food" in html                          # title-cased like the CLI
+    assert "Food" in html
     assert "₦1,234.56" in html
 
 
@@ -100,8 +147,7 @@ def test_invalid_amount_is_rejected_and_nothing_saved(tmp_path):
 
 
 def test_future_date_is_rejected(tmp_path):
-    client = make_client(tmp_path)
-    response = client.post("/transactions/new", data={
+    response = make_client(tmp_path).post("/transactions/new", data={
         "type": "expense", "description": "Rice", "category": "Food",
         "amount": "100", "date": "2999-01-01",
     })
@@ -110,8 +156,7 @@ def test_future_date_is_rejected(tmp_path):
 
 
 def test_expense_without_category_is_rejected(tmp_path):
-    client = make_client(tmp_path)
-    response = client.post("/transactions/new", data={
+    response = make_client(tmp_path).post("/transactions/new", data={
         "type": "expense", "description": "Rice", "category": "",
         "amount": "100", "date": "2026-10-07",
     })
@@ -120,19 +165,14 @@ def test_expense_without_category_is_rejected(tmp_path):
 
 
 def test_form_keeps_values_after_an_error(tmp_path):
-    client = make_client(tmp_path)
-    response = client.post("/transactions/new", data={
+    response = make_client(tmp_path).post("/transactions/new", data={
         "type": "expense", "description": "Rice and chicken", "category": "Food",
         "amount": "abc", "date": "2026-10-07",
     })
     assert 'value="Rice and chicken"' in response.get_data(as_text=True)
 
-def first_id(tmp_path):
-    conn = sqlite3.connect(str(tmp_path / "test_web.db"))
-    row_id = database.get_all_transactions(conn)[0][0]
-    conn.close()
-    return row_id
 
+# ---------- delete and edit ----------
 
 def test_delete_removes_the_transaction(tmp_path):
     client = make_client(tmp_path, [Transaction("expense", "Rice", 500, "2026-10-01", "Food")])
@@ -143,8 +183,7 @@ def test_delete_removes_the_transaction(tmp_path):
 
 
 def test_delete_missing_id_is_404(tmp_path):
-    client = make_client(tmp_path)
-    assert client.post("/transactions/999/delete").status_code == 404
+    assert make_client(tmp_path).post("/transactions/999/delete").status_code == 404
 
 
 def test_delete_by_get_is_not_allowed(tmp_path):
@@ -187,16 +226,10 @@ def test_edit_with_invalid_data_changes_nothing(tmp_path):
 
 
 def test_edit_missing_id_is_404(tmp_path):
-    client = make_client(tmp_path)
-    assert client.get("/transactions/999/edit").status_code == 404
+    assert make_client(tmp_path).get("/transactions/999/edit").status_code == 404
 
-def search_client(tmp_path):
-    return make_client(tmp_path, [
-        Transaction("income", "Salary", 5000000, "2026-10-01"),
-        Transaction("expense", "Rice", 500000, "2026-10-07", "Food"),
-        Transaction("expense", "Bus fare", 200000, "2026-09-28", "Transport"),
-    ])
 
+# ---------- search ----------
 
 def test_search_by_keyword(tmp_path):
     html = search_client(tmp_path).get("/transactions?q=rice").get_data(as_text=True)
@@ -242,6 +275,9 @@ def test_filtered_rows_keep_their_real_ids(tmp_path):
     assert "/transactions/3/edit" in html
     assert "/transactions/1/edit" not in html
 
+
+# ---------- breakdown ----------
+
 def test_breakdown_shows_categories_and_percentages(tmp_path):
     client = make_client(tmp_path, [
         Transaction("income", "Salary", 5000000, "2026-10-01"),
@@ -258,3 +294,21 @@ def test_breakdown_shows_categories_and_percentages(tmp_path):
 def test_breakdown_empty(tmp_path):
     html = make_client(tmp_path).get("/breakdown").get_data(as_text=True)
     assert "No expenses yet." in html
+
+
+# ---------- layout ----------
+
+def test_stylesheet_is_served(tmp_path):
+    response = make_client(tmp_path).get("/static/style.css")
+    assert response.status_code == 200
+    assert "text/css" in response.content_type
+
+
+def test_every_page_uses_the_shared_layout(tmp_path):
+    client = make_client(tmp_path, [Transaction("expense", "Rice", 500, "2026-10-01", "Food")])
+    row_id = first_id(tmp_path)
+    for url in ["/", "/transactions", "/transactions/new",
+                f"/transactions/{row_id}/edit", "/breakdown"]:
+        html = client.get(url).get_data(as_text=True)
+        assert "style.css" in html, url
+        assert 'class="nav"' in html, url
