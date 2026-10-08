@@ -93,6 +93,7 @@ def create_app(db_file=None, secret_key=None, csrf=True):
     app.config["SECRET_KEY"] = secret_key
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("PRODUCTION") == "1"
 
     app.config["WTF_CSRF_ENABLED"] = csrf
     app.config["WTF_CSRF_TIME_LIMIT"] = None   # token lasts as long as the session
@@ -293,5 +294,20 @@ def create_app(db_file=None, secret_key=None, csrf=True):
             shares=calculations.category_shares(spending),
             expenses=calculations.total_expenses(transactions),
         )
+
+    @app.errorhandler(400)
+    @app.errorhandler(404)
+    @app.errorhandler(429)
+    @app.errorhandler(500)
+    def error_page(error):
+        code = getattr(error, "code", 500)
+        messages = {
+            400: ("Request not accepted", "Your session may have expired. Go back, refresh the page and try again."),
+            404: ("Page not found", "That page doesn't exist, or it isn't yours to see."),
+            429: ("Too many attempts", "Please wait a few minutes and try again."),
+            500: ("Something went wrong", "That was our fault. Please try again later."),
+        }
+        title, message = messages.get(code, messages[500])
+        return render_template("error.html", code=code, title=title, message=message), code
 
     return app
