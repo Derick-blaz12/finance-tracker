@@ -18,7 +18,7 @@ def create_table(connection):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             type TEXT NOT NULL,
             description TEXT NOT NULL,
-            amount REAL NOT NULL,
+            amount INTEGER NOT NULL,
             date TEXT NOT NULL,
             category TEXT
         )
@@ -87,3 +87,33 @@ def delete_transaction(connection, transaction_id):
     )
     connection.commit()
     return cursor.rowcount == 1
+
+def convert_amounts_to_kobo(connection):
+    """Rebuild the table with INTEGER amounts, multiplying old values by 100.
+
+    Returns the number of rows converted, or 0 if already converted.
+    """
+    columns = connection.execute("PRAGMA table_info(transactions)").fetchall()
+    amount_type = next(c[2] for c in columns if c[1] == "amount")
+    if amount_type.upper() == "INTEGER":
+        return 0
+
+    count = connection.execute("SELECT COUNT(*) FROM transactions").fetchone()[0]
+    connection.executescript("""
+        BEGIN;
+        CREATE TABLE transactions_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
+            description TEXT NOT NULL,
+            amount INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            category TEXT
+        );
+        INSERT INTO transactions_new (id, type, description, amount, date, category)
+            SELECT id, type, description, CAST(ROUND(amount * 100) AS INTEGER), date, category
+            FROM transactions;
+        DROP TABLE transactions;
+        ALTER TABLE transactions_new RENAME TO transactions;
+        COMMIT;
+    """)
+    return count

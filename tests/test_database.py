@@ -99,3 +99,31 @@ def test_update_unknown_field_raises(conn):
     new_id = database.add_transaction(conn, expense())
     with pytest.raises(ValueError):
         database.update_transaction(conn, new_id, "ammount", 1)
+
+def test_amount_comes_back_as_int(conn):
+    database.add_transaction(conn, expense(amount=500050))
+    (_, t), = database.get_all_transactions(conn)
+    assert t.amount == 500050
+    assert isinstance(t.amount, int)
+
+
+def test_convert_old_real_table_to_kobo():
+    old = sqlite3.connect(":memory:")
+    old.execute("""CREATE TABLE transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL,
+        description TEXT NOT NULL, amount REAL NOT NULL,
+        date TEXT NOT NULL, category TEXT)""")
+    old.execute("INSERT INTO transactions (type, description, amount, date, category) "
+                "VALUES ('expense', 'Rice', 5000.5, '2026-10-04', 'Food')")
+    old.execute("INSERT INTO transactions (type, description, amount, date) "
+                "VALUES ('income', 'Salary', 200000.0, '2026-10-04')")
+    old.commit()
+
+    assert database.convert_amounts_to_kobo(old) == 2
+    amounts = [t.amount for _, t in database.get_all_transactions(old)]
+    assert amounts == [500050, 20000000]
+    assert all(isinstance(a, int) for a in amounts)
+
+
+def test_convert_twice_does_nothing(conn):
+    assert database.convert_amounts_to_kobo(conn) == 0

@@ -1,18 +1,20 @@
 from datetime import date, datetime
+from money import parse_naira
 
 
 def get_amount():
-    """Keep asking until the user enters a valid positive number."""
+    """Keep asking until the user enters a valid positive amount. Returns kobo."""
     while True:
+        text = input("Amount: ")
         try:
-            amount = float(input("Amount: "))
-            if amount <= 0:
-                print("Amount must be greater than 0.")
-                continue
-            return amount
+            kobo = parse_naira(text)
         except ValueError:
-            print("Please enter a valid number.")
-
+            print("Please enter a valid amount, like 5000 or 5000.50 (2 decimal places at most).")
+            continue
+        if kobo <= 0:
+            print("Amount must be greater than 0.")
+            continue
+        return kobo
 
 def get_description():
     """Keep asking until the user enters a non-empty description."""

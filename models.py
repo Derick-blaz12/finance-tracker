@@ -10,7 +10,7 @@ EXPENSE = "expense"
 class Transaction:
     type: str
     description: str
-    amount: float
+    amount: int
     date: str
     category: Optional[str] = None
 
@@ -23,10 +23,9 @@ class Transaction:
         self.description = self.description.strip()
 
         if (isinstance(self.amount, bool)
-                or not isinstance(self.amount, (int, float))
+                or not isinstance(self.amount, int)
                 or not self.amount > 0):
-            raise ValueError("Amount must be a number greater than 0.")
-
+            raise ValueError("Amount must be a whole number of kobo greater than 0.")
         try:
             parsed = datetime.strptime(self.date, "%Y-%m-%d").date()
         except (ValueError, TypeError):

@@ -11,7 +11,7 @@ from input_helpers import (
     get_transaction_number,
 )
 from models import Transaction
-
+from money import format_naira
 
 connection = None  # set by main.py (and by the tests)
 
@@ -31,7 +31,7 @@ def format_transaction(number, t):
     line = f"{number}. {t.date} | [{t.type}] {t.description}"
     if t.category:
         line += f" | {t.category}"
-    line += f" | ₦{t.amount:,.2f}"
+    line += f" | {format_naira(t.amount)}"
     return line
 
 
@@ -58,7 +58,7 @@ def delete_transaction():
         return
 
     row_id, t = rows[number - 1]  # screen number -> database id
-    confirm = input(f"Delete '{t.description}' (₦{t.amount:,.2f})? (y/n): ").strip().lower()
+    confirm = input(f"Delete '{t.description}' ({format_naira(t.amount)})? (y/n): ").strip().lower()
     if confirm == "y":
         database.delete_transaction(connection, row_id)
         print("Transaction deleted.")
@@ -84,7 +84,7 @@ def edit_transaction():
     parts = [t.description]
     if t.category:
         parts.append(t.category)
-    parts.append(f"₦{t.amount:,.2f}")
+    parts.append(format_naira(t.amount))
     parts.append(t.date)
     print("\nEditing: " + " | ".join(parts))
 
@@ -152,6 +152,7 @@ def search_by_type():
         return
     show_results(results)
 
+
 def search_by_exact_date():
     date = get_date("Date (YYYY-MM-DD, press Enter for today): ")
     results = filters.filter_by_date(load_transactions(), date)
@@ -174,12 +175,11 @@ def search_by_range():
     while True:
         start = get_date("From (YYYY-MM-DD, press Enter for today): ")
         end = get_date("To (YYYY-MM-DD, press Enter for today): ")
-        try:
-            results = filters.filter_by_range(load_transactions(), start, end)
+        if start <= end:
             break
-        except ValueError:
-            print("The start date cannot be after the end date. Try again.")
+        print("The start date cannot be after the end date. Try again.")
 
+    results = filters.filter_by_range(load_transactions(), start, end)
     if not results:
         print(f"No transactions found from {start} to {end}.")
         return
@@ -238,7 +238,7 @@ def average_expense():
     if average is None:
         print("No expenses yet.")
         return
-    print(f"\nAverage expense: ₦{average:,.2f}")
+    print(f"\nAverage expense: {format_naira(round(average))}")
 
 
 def spending_by_category():
@@ -250,7 +250,8 @@ def spending_by_category():
 
     print("\n--- Spending by Category ---")
     for category, amount in ranked:
-        print(f"{category}: ₦{amount:,.2f}")
+        print(f"{category}: {format_naira(amount)}")
+
 
 def monthly_summary():
     """Print income, expenses and net for each month."""
@@ -261,8 +262,10 @@ def monthly_summary():
 
     print("\n--- Monthly Summary ---")
     for month, income, expenses, net in summary:
-        sign = "-" if net < 0 else ""
-        print(f"{month} | Income: ₦{income:,.2f} | Expenses: ₦{expenses:,.2f} | Net: {sign}₦{abs(net):,.2f}")
+        print(
+            f"{month} | Income: {format_naira(income)} | "
+            f"Expenses: {format_naira(expenses)} | Net: {format_naira(net)}"
+        )
 
 
 def show_statistics():
@@ -272,21 +275,21 @@ def show_statistics():
         return
 
     choice = choose(
-    [
-        "Total income",
-        "Total expenses",
-        "Largest expense",
-        "Average expense",
-        "Spending by category",
-        "Monthly summary",
-        "Cancel",
-    ],
-    title="--- Statistics ---",
+        [
+            "Total income",
+            "Total expenses",
+            "Largest expense",
+            "Average expense",
+            "Spending by category",
+            "Monthly summary",
+            "Cancel",
+        ],
+        title="--- Statistics ---",
     )
     if choice == 1:
-        print(f"Total income: ₦{calculations.total_income(transactions):,.2f}")
+        print(f"Total income: {format_naira(calculations.total_income(transactions))}")
     elif choice == 2:
-        print(f"Total expenses: ₦{calculations.total_expenses(transactions):,.2f}")
+        print(f"Total expenses: {format_naira(calculations.total_expenses(transactions))}")
     elif choice == 3:
         largest_expense()
     elif choice == 4:

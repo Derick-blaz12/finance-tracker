@@ -1,6 +1,7 @@
 import calculations
 import database
 import tracker
+from money import format_naira
 
 
 def show_menu():
@@ -35,13 +36,13 @@ def main():
                 tracker.view_transactions()
             elif choice == "4":
                 transactions = tracker.load_transactions()
-                print(f"Total income: ₦{calculations.total_income(transactions):,.2f}")
+                print(f"Total income: {format_naira(calculations.total_income(transactions))}")
             elif choice == "5":
                 transactions = tracker.load_transactions()
-                print(f"Total expenses: ₦{calculations.total_expenses(transactions):,.2f}")
+                print(f"Total expenses: {format_naira(calculations.total_expenses(transactions))}")
             elif choice == "6":
                 transactions = tracker.load_transactions()
-                print(f"Current balance: ₦{calculations.current_balance(transactions):,.2f}")
+                print(f"Current balance: {format_naira(calculations.current_balance(transactions))}")
             elif choice == "7":
                 tracker.delete_transaction()
             elif choice == "8":

@@ -101,3 +101,12 @@ def test_misspelled_field_name_is_an_error():
     with pytest.raises(TypeError):
         Transaction(type="expense", descripton="Rice", amount=5000,
                     date="2026-10-04", category="Food")
+
+def test_rejects_float_amount():
+    for bad in [5000.5, 5000.0]:
+        with pytest.raises(ValueError):
+            make_expense(amount=bad)
+
+
+def test_accepts_integer_kobo():
+    assert make_expense(amount=500050).amount == 500050
