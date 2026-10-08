@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Finance Tracker{% endblock %} - Finance Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="{{ url_for('dashboard') }}">Finance Tracker</a>
+      <nav class="nav">
+        <a href="{{ url_for('dashboard') }}"
+           {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+        <a href="{{ url_for('transactions_page') }}"
+           {% if request.endpoint in ('transactions_page', 'edit_transaction') %}class="active"{% endif %}>Transactions</a>
+        <a href="{{ url_for('breakdown') }}"
+           {% if request.endpoint == 'breakdown' %}class="active"{% endif %}>Breakdown</a>
+        <a class="nav-action" href="{{ url_for('new_transaction') }}">+ Add transaction</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,55 +1,55 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Add transaction - Finance Tracker</title>
-</head>
-<body>
-  <h1>{% if editing %}Edit transaction{% else %}Add transaction{% endif %}</h1>
-  <p><a href="/transactions">Back to transactions</a></p>
+{% extends "base.html" %}
+{% block title %}{% if editing %}Edit transaction{% else %}Add transaction{% endif %}{% endblock %}
 
-  {% if errors %}
-  <ul style="color: red;">
-    {% for message in errors %}
-    <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+{% block content %}
+<h1>{% if editing %}Edit transaction{% else %}Add transaction{% endif %}</h1>
 
-  <form method="post">
-    <p>
-      Type:
+{% if errors %}
+<ul class="errors">
+  {% for message in errors %}
+  <li>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<form class="panel form" method="post">
+  <div class="field">
+    <span class="label-text">Type</span>
+    <div class="radio-row">
       <label><input type="radio" name="type" value="expense"
         {% if form.get("type", "expense") == "expense" %}checked{% endif %}> Expense</label>
       <label><input type="radio" name="type" value="income"
         {% if form.get("type") == "income" %}checked{% endif %}> Income</label>
-    </p>
-    <p>
-      <label>Description:
-        <input type="text" name="description" value="{{ form.get('description', '') }}">
-      </label>
-    </p>
-    <p>
-      <label>Category (expenses only):
-        <input type="text" name="category" list="category-options"
-               value="{{ form.get('category', '') }}">
-      </label>
-      <datalist id="category-options">
-        {% for name in categories %}<option value="{{ name }}">{% endfor %}
-      </datalist>
-    </p>
-    <p>
-      <label>Amount (₦):
-        <input type="text" name="amount" value="{{ form.get('amount', '') }}">
-      </label>
-    </p>
-    <p>
-      <label>Date (YYYY-MM-DD):
-        <input type="text" name="date" value="{{ form.get('date', '') }}">
-      </label>
-    </p>
-    <button type="submit">Save</button>
-  </form>
-</body>
-</html>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="description">Description</label>
+    <input type="text" id="description" name="description" value="{{ form.get('description', '') }}">
+  </div>
+
+  <div class="field">
+    <label for="category">Category <span class="hint">(expenses only)</span></label>
+    <input type="text" id="category" name="category" list="category-options"
+           value="{{ form.get('category', '') }}">
+    <datalist id="category-options">
+      {% for name in categories %}<option value="{{ name }}">{% endfor %}
+    </datalist>
+  </div>
+
+  <div class="field">
+    <label for="amount">Amount (₦)</label>
+    <input type="text" id="amount" name="amount" value="{{ form.get('amount', '') }}">
+  </div>
+
+  <div class="field">
+    <label for="date">Date <span class="hint">(YYYY-MM-DD)</span></label>
+    <input type="text" id="date" name="date" value="{{ form.get('date', '') }}">
+  </div>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Save</button>
+    <a href="{{ url_for('transactions_page') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

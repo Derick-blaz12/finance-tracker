@@ -1,16 +1,48 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Finance Tracker</title>
-</head>
-<body>
-  <h1>Finance Tracker</h1>
-  <p>Balance: <strong>{{ balance | naira }}</strong></p>
-  <p>Income: {{ income | naira }}</p>
-  <p>Expenses: {{ expenses | naira }}</p>
-  <p><a href="/transactions">View all transactions</a></p>
-  <p><a href="/breakdown">View spending breakdown</a></p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="cards">
+  <div class="card">
+    <div class="label">Balance</div>
+    <div class="value {% if balance < 0 %}expense{% endif %}">{{ balance | naira }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Income</div>
+    <div class="value income">{{ income | naira }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Expenses</div>
+    <div class="value expense">{{ expenses | naira }}</div>
+  </div>
+</div>
+
+<p>
+  <a class="btn btn-primary" href="{{ url_for('new_transaction') }}">Add transaction</a>
+  <a class="btn" href="{{ url_for('transactions_page') }}">View all transactions</a>
+  <a class="btn" href="{{ url_for('breakdown') }}">Spending breakdown</a>
+</p>
+
+<h2>Recent months</h2>
+{% if months %}
+<div class="table-wrap">
+  <table class="data">
+    <tr>
+      <th>Month</th><th class="num">Income</th><th class="num">Expenses</th><th class="num">Net</th>
+    </tr>
+    {% for month, month_income, month_expenses, net in months %}
+    <tr>
+      <td>{{ month }}</td>
+      <td class="num income">{{ month_income | naira }}</td>
+      <td class="num expense">{{ month_expenses | naira }}</td>
+      <td class="num {% if net < 0 %}expense{% else %}income{% endif %}">{{ net | naira }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<p class="empty">No transactions yet. Add one to see your monthly summary.</p>
+{% endif %}
+{% endblock %}

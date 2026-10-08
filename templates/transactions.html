@@ -1,46 +1,56 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Transactions - Finance Tracker</title>
-</head>
-<body>
-  <h1>Transactions</h1>
-  <p><a href="/">Dashboard</a></p>
-  <p><a href="/transactions/new">Add transaction</a></p>
+{% extends "base.html" %}
+{% block title %}Transactions{% endblock %}
 
-  <form method="get" action="/transactions">
-    <label>Search: <input type="text" name="q" value="{{ q }}"></label>
-    <label>Type:
-      <select name="type">
+{% block content %}
+<h1>Transactions</h1>
+
+<form class="panel" method="get" action="{{ url_for('transactions_page') }}">
+  <div class="filters">
+    <div class="field">
+      <label for="q">Search</label>
+      <input type="text" id="q" name="q" value="{{ q }}">
+    </div>
+    <div class="field">
+      <label for="type">Type</label>
+      <select id="type" name="type">
         <option value="" {% if not kind %}selected{% endif %}>All</option>
         <option value="income" {% if kind == "income" %}selected{% endif %}>Income</option>
         <option value="expense" {% if kind == "expense" %}selected{% endif %}>Expense</option>
       </select>
-    </label>
-    <label>From: <input type="text" name="start" placeholder="YYYY-MM-DD" value="{{ start }}"></label>
-    <label>To: <input type="text" name="end" placeholder="YYYY-MM-DD" value="{{ end }}"></label>
-    <button type="submit">Filter</button>
-    {% if filtering %}<a href="/transactions">Clear</a>{% endif %}
-  </form>
+    </div>
+    <div class="field">
+      <label for="start">From</label>
+      <input type="text" id="start" name="start" placeholder="YYYY-MM-DD" value="{{ start }}">
+    </div>
+    <div class="field">
+      <label for="end">To</label>
+      <input type="text" id="end" name="end" placeholder="YYYY-MM-DD" value="{{ end }}">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Filter</button>
+      {% if filtering %}<a href="{{ url_for('transactions_page') }}">Clear</a>{% endif %}
+    </div>
+  </div>
+</form>
 
-  {% if errors %}
-  <ul style="color: red;">
-    {% for message in errors %}
-    <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+{% if errors %}
+<ul class="errors">
+  {% for message in errors %}
+  <li>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
 
-  {% if filtering %}
-  <p>Showing {{ rows | length }} of {{ total }} transactions.</p>
-  {% endif %}
+{% if filtering %}
+<p class="meta">Showing {{ rows | length }} of {{ total }} transactions.</p>
+{% endif %}
 
-  {% if rows %}
-  <table border="1" cellpadding="6">
+{% if rows %}
+<div class="table-wrap">
+  <table class="data">
     <tr>
-      <th>Date</th><th>Type</th><th>Description</th><th>Category</th><th>Amount</th><th></th>
+      <th>Date</th><th>Type</th><th>Description</th><th>Category</th>
+      <th class="num">Amount</th><th></th>
     </tr>
     {% for id, t in rows %}
     <tr>
@@ -48,21 +58,22 @@
       <td>{{ t.type }}</td>
       <td>{{ t.description }}</td>
       <td>{{ t.category or "" }}</td>
-      <td>{{ t.amount | naira }}</td>
-      <td>
-        <a href="/transactions/{{ id }}/edit">Edit</a>
-        <form method="post" action="/transactions/{{ id }}/delete" style="display:inline"
+      <td class="num {{ t.type }}">{{ t.amount | naira }}</td>
+      <td class="actions">
+        <a class="btn btn-small" href="{{ url_for('edit_transaction', transaction_id=id) }}">Edit</a>
+        <form class="inline-form" method="post"
+              action="{{ url_for('delete_transaction', transaction_id=id) }}"
               onsubmit="return confirm('Delete this transaction?');">
-          <button type="submit">Delete</button>
+          <button class="btn btn-small btn-danger" type="submit">Delete</button>
         </form>
       </td>
     </tr>
     {% endfor %}
   </table>
-  {% elif filtering %}
-  <p>No transactions match your search.</p>
-  {% else %}
-  <p>No transactions yet.</p>
-  {% endif %}
-</body>
-</html>
+</div>
+{% elif filtering %}
+<p class="empty">No transactions match your search.</p>
+{% else %}
+<p class="empty">No transactions yet.</p>
+{% endif %}
+{% endblock %}
