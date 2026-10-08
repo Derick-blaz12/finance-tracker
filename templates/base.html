@@ -17,7 +17,7 @@
            {% if request.endpoint in ('transactions_page', 'edit_transaction') %}class="active"{% endif %}>Transactions</a>
         <a href="{{ url_for('breakdown') }}"
            {% if request.endpoint == 'breakdown' %}class="active"{% endif %}>Breakdown</a>
-        <a class="nav-action" href="{{ url_for('new_transaction') }}">+ Add transaction</a>
+        <a class="nav-action" href="{{ url_for('new_transaction') }}">+ Add</a>
       </nav>
     </div>
   </header>

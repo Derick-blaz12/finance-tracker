@@ -48,27 +48,31 @@
 {% if rows %}
 <div class="table-wrap">
   <table class="data">
-    <tr>
-      <th>Date</th><th>Type</th><th>Description</th><th>Category</th>
-      <th class="num">Amount</th><th></th>
-    </tr>
-    {% for id, t in rows %}
-    <tr>
-      <td>{{ t.date }}</td>
-      <td>{{ t.type }}</td>
-      <td>{{ t.description }}</td>
-      <td>{{ t.category or "" }}</td>
-      <td class="num {{ t.type }}">{{ t.amount | naira }}</td>
-      <td class="actions">
-        <a class="btn btn-small" href="{{ url_for('edit_transaction', transaction_id=id) }}">Edit</a>
-        <form class="inline-form" method="post"
-              action="{{ url_for('delete_transaction', transaction_id=id) }}"
-              onsubmit="return confirm('Delete this transaction?');">
-          <button class="btn btn-small btn-danger" type="submit">Delete</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
+    <thead>
+      <tr>
+        <th>Date</th><th>Type</th><th>Description</th><th>Category</th>
+        <th class="num">Amount</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for id, t in rows %}
+      <tr>
+        <td data-label="Date">{{ t.date }}</td>
+        <td data-label="Type">{{ t.type }}</td>
+        <td data-label="Description">{{ t.description }}</td>
+        <td data-label="Category">{{ t.category or "" }}</td>
+        <td data-label="Amount" class="num {{ t.type }}">{{ t.amount | naira }}</td>
+        <td class="actions no-label">
+          <a class="btn btn-small" href="{{ url_for('edit_transaction', transaction_id=id) }}">Edit</a>
+          <form class="inline-form" method="post"
+                action="{{ url_for('delete_transaction', transaction_id=id) }}"
+                onsubmit="return confirm('Delete this transaction?');">
+            <button class="btn btn-small btn-danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
 {% elif filtering %}

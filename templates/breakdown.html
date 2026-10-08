@@ -8,17 +8,21 @@
 <p class="meta">Total expenses: <strong>{{ expenses | naira }}</strong></p>
 <div class="table-wrap">
   <table class="data">
-    <tr><th>Category</th><th class="num">Total</th><th class="num">Share</th><th></th></tr>
-    {% for category, total, percent in shares %}
-    <tr>
-      <td>{{ category }}</td>
-      <td class="num">{{ total | naira }}</td>
-      <td class="num">{{ percent }}%</td>
-      <td style="width: 35%;">
-        <div class="bar-track"><div class="bar" style="width: {{ percent }}%"></div></div>
-      </td>
-    </tr>
-    {% endfor %}
+    <thead>
+      <tr><th>Category</th><th class="num">Total</th><th class="num">Share</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for category, total, percent in shares %}
+      <tr>
+        <td data-label="Category">{{ category }}</td>
+        <td data-label="Total" class="num">{{ total | naira }}</td>
+        <td data-label="Share" class="num">{{ percent }}%</td>
+        <td class="bar-cell no-label">
+          <div class="bar-track"><div class="bar" style="width: {{ percent }}%"></div></div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
 {% else %}

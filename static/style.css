@@ -1,4 +1,3 @@
-/* ---------- design tokens: change colours/spacing here ---------- */
 :root {
   --bg: #f6f7f9;
   --surface: #ffffff;
@@ -16,7 +15,6 @@
   --space: 1rem;
 }
 
-/* ---------- base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
@@ -37,107 +35,68 @@ a { color: var(--primary); }
 
 /* ---------- header and navigation ---------- */
 .site-header { background: var(--surface); border-bottom: 1px solid var(--border); }
-
 .header-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 0.5rem 1rem; padding-top: 0.75rem; padding-bottom: 0.75rem;
 }
-
 .brand { font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; }
-
 .nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; }
-.nav a { padding: 0.4rem 0.7rem; border-radius: var(--radius); text-decoration: none; color: var(--muted); }
+.nav a { padding: 0.4rem 0.7rem; border-radius: var(--radius); text-decoration: none; color: var(--muted); white-space: nowrap; }
 .nav a:hover { background: var(--bg); color: var(--text); }
 .nav a.active { color: var(--primary); background: #eaf1ff; font-weight: 600; }
 .nav a.nav-action { background: var(--primary); color: #fff; }
 .nav a.nav-action:hover { background: var(--primary-dark); color: #fff; }
 
-/* ---------- cards (dashboard) ---------- */
+/* ---------- cards ---------- */
 .cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space);
-  margin-bottom: 1.5rem;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space); margin-bottom: 1.5rem;
 }
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-}
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
 .card .label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .card .value { font-size: 1.6rem; font-weight: 700; overflow-wrap: anywhere; }
 
+.button-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; }
+
 /* ---------- tables ---------- */
-.table-wrap {
-  overflow-x: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 table.data { width: 100%; border-collapse: collapse; }
 table.data th, table.data td {
-  text-align: left;
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-  overflow-wrap: anywhere;   /* long descriptions wrap instead of stretching the page */
+  text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border);
+  vertical-align: top; overflow-wrap: break-word;
 }
 table.data th {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  background: #fafbfc;
+  font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted); background: #fafbfc;
 }
-table.data tr:last-child td { border-bottom: 0; }
+table.data tbody tr:last-child td { border-bottom: 0; }
 table.data .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 table.data .actions { white-space: nowrap; }
+table.data .bar-cell { width: 35%; }
 .income { color: var(--income); }
 .expense { color: var(--expense); }
 
 /* ---------- buttons ---------- */
 .btn {
-  display: inline-block;
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-  text-decoration: none;
+  display: inline-block; padding: 0.5rem 0.9rem; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--surface); color: var(--text);
+  font: inherit; cursor: pointer; text-decoration: none;
 }
 .btn:hover { background: var(--bg); }
 .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); }
 .btn-danger { color: var(--danger); border-color: var(--error-border); }
-.btn-small { padding: 0.2rem 0.6rem; font-size: 0.85rem; }
+.btn-small { padding: 0.25rem 0.7rem; font-size: 0.85rem; }
 .inline-form { display: inline; margin: 0; }
 
 /* ---------- forms ---------- */
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
-}
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem; }
 .form { max-width: 560px; }
 .field { margin-bottom: 1rem; }
 .field label, .field .label-text { display: block; font-weight: 600; margin-bottom: 0.25rem; }
 .field input[type="text"], .field select {
-  width: 100%;
-  padding: 0.55rem 0.65rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font: inherit;
-  background: #fff;
+  width: 100%; padding: 0.55rem 0.65rem; border: 1px solid var(--border);
+  border-radius: var(--radius); font: inherit; background: #fff;
 }
 .hint { color: var(--muted); font-size: 0.85rem; font-weight: 400; }
 .radio-row { display: flex; gap: 1.25rem; }
@@ -145,43 +104,65 @@ table.data .actions { white-space: nowrap; }
 .form-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
 
 .filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.75rem;
-  align-items: end;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem; align-items: end;
 }
 .filters .field { margin: 0; }
 
 input:focus-visible, select:focus-visible, .btn:focus-visible, a:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline: 2px solid var(--primary); outline-offset: 2px;
 }
 
 /* ---------- messages ---------- */
 .errors {
-  background: var(--error-bg);
-  border: 1px solid var(--error-border);
-  color: #991b1b;
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem 0.75rem 2rem;
-  margin: 0 0 1rem;
+  background: var(--error-bg); border: 1px solid var(--error-border); color: #991b1b;
+  border-radius: var(--radius); padding: 0.75rem 1rem 0.75rem 2rem; margin: 0 0 1rem;
 }
 .empty {
-  text-align: center;
-  color: var(--muted);
-  padding: 2rem 1rem;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
+  text-align: center; color: var(--muted); padding: 2rem 1rem;
+  border: 1px dashed var(--border); border-radius: var(--radius); background: var(--surface);
 }
 
 /* ---------- breakdown bars ---------- */
 .bar-track { background: #e5e7eb; height: 12px; border-radius: 999px; overflow: hidden; min-width: 80px; }
 .bar { background: var(--primary); height: 100%; }
 
-/* ---------- small screens ---------- */
-@media (max-width: 600px) {
+/* ---------- phones: rows become cards ---------- */
+@media (max-width: 640px) {
   h1 { font-size: 1.35rem; }
-  .card .value { font-size: 1.35rem; }
-  table.data th, table.data td { padding: 0.5rem; }
+  main.container { padding-top: 1rem; }
+
+  .header-inner { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+  .nav { width: 100%; gap: 0.2rem; }
+  .nav a { padding: 0.4rem 0.6rem; font-size: 0.92rem; }
+
+  .cards { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .cards .card:first-child { grid-column: 1 / -1; }
+  .card { padding: 0.75rem 0.9rem; }
+  .card .value { font-size: 1.25rem; }
+  .cards .card:first-child .value { font-size: 1.6rem; }
+
+  .panel { padding: 1rem; }
+  .btn { padding: 0.55rem 0.9rem; }
+
+  .table-wrap { overflow: visible; background: transparent; border: 0; }
+  table.data, table.data tbody, table.data tr, table.data td { display: block; width: 100%; }
+  table.data thead { display: none; }
+  table.data tr {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0.5rem 0.9rem; margin-bottom: 0.75rem;
+  }
+  table.data td {
+    display: flex; justify-content: space-between; gap: 1rem;
+    border: 0; padding: 0.25rem 0; text-align: right;
+  }
+  table.data td::before {
+    content: attr(data-label); flex-shrink: 0; text-align: left;
+    color: var(--muted); font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.04em; padding-top: 0.15rem;
+  }
+  table.data td.no-label::before { display: none; }
+  table.data td.actions { justify-content: flex-start; gap: 0.5rem; padding-top: 0.6rem; }
+  table.data .bar-cell { width: 100%; }
+  .bar-track { width: 100%; }
 }

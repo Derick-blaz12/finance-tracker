@@ -19,27 +19,31 @@
   </div>
 </div>
 
-<p>
+<div class="button-row">
   <a class="btn btn-primary" href="{{ url_for('new_transaction') }}">Add transaction</a>
-  <a class="btn" href="{{ url_for('transactions_page') }}">View all transactions</a>
-  <a class="btn" href="{{ url_for('breakdown') }}">Spending breakdown</a>
-</p>
+  <a class="btn" href="{{ url_for('transactions_page') }}">All transactions</a>
+  <a class="btn" href="{{ url_for('breakdown') }}">Breakdown</a>
+</div>
 
 <h2>Recent months</h2>
 {% if months %}
 <div class="table-wrap">
   <table class="data">
-    <tr>
-      <th>Month</th><th class="num">Income</th><th class="num">Expenses</th><th class="num">Net</th>
-    </tr>
-    {% for month, month_income, month_expenses, net in months %}
-    <tr>
-      <td>{{ month }}</td>
-      <td class="num income">{{ month_income | naira }}</td>
-      <td class="num expense">{{ month_expenses | naira }}</td>
-      <td class="num {% if net < 0 %}expense{% else %}income{% endif %}">{{ net | naira }}</td>
-    </tr>
-    {% endfor %}
+    <thead>
+      <tr>
+        <th>Month</th><th class="num">Income</th><th class="num">Expenses</th><th class="num">Net</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for month, month_income, month_expenses, net in months %}
+      <tr>
+        <td data-label="Month">{{ month }}</td>
+        <td data-label="Income" class="num income">{{ month_income | naira }}</td>
+        <td data-label="Expenses" class="num expense">{{ month_expenses | naira }}</td>
+        <td data-label="Net" class="num {% if net < 0 %}expense{% else %}income{% endif %}">{{ net | naira }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
 {% else %}
