@@ -241,3 +241,20 @@ def test_filtered_rows_keep_their_real_ids(tmp_path):
     html = search_client(tmp_path).get("/transactions?q=bus").get_data(as_text=True)
     assert "/transactions/3/edit" in html
     assert "/transactions/1/edit" not in html
+
+def test_breakdown_shows_categories_and_percentages(tmp_path):
+    client = make_client(tmp_path, [
+        Transaction("income", "Salary", 5000000, "2026-10-01"),
+        Transaction("expense", "Rice", 750000, "2026-10-02", "Food"),
+        Transaction("expense", "Bus", 250000, "2026-10-03", "Transport"),
+    ])
+    html = client.get("/breakdown").get_data(as_text=True)
+    assert "Food" in html and "Transport" in html
+    assert "75.0%" in html and "25.0%" in html
+    assert html.index("Food") < html.index("Transport")
+    assert "Salary" not in html
+
+
+def test_breakdown_empty(tmp_path):
+    html = make_client(tmp_path).get("/breakdown").get_data(as_text=True)
+    assert "No expenses yet." in html

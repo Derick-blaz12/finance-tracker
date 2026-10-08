@@ -169,4 +169,14 @@ def create_app(db_file=None):
             categories=CATEGORIES, editing=True,
         )
 
+    @app.route("/breakdown")
+    def breakdown():
+        transactions = [t for _, t in database.get_all_transactions(get_db())]
+        spending = calculations.calculate_spending_by_category(transactions)
+        return render_template(
+            "breakdown.html",
+            shares=calculations.category_shares(spending),
+            expenses=calculations.total_expenses(transactions),
+        )
+
     return app

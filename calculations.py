@@ -77,3 +77,17 @@ def calculate_monthly_summary(transactions):
         expenses = months[month]["expenses"]
         summary.append((month, income, expenses, income - expenses))
     return summary
+
+def category_shares(spending):
+    """Turn (category, total) pairs into (category, total, percent) tuples.
+
+    percent is each category's share of all spending, rounded to 1 decimal place.
+    Returns an empty list if there is no spending.
+    """
+    grand_total = sum(total for _, total in spending)
+    if grand_total == 0:
+        return []
+    return [
+        (category, total, round(total * 100 / grand_total, 1))
+        for category, total in spending
+    ]

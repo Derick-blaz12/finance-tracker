@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spending breakdown - Finance Tracker</title>
+  <style>
+    .bar-track { background: #eee; width: 100%; max-width: 400px; height: 18px; }
+    .bar { background: #3b82f6; height: 18px; }
+    td { padding: 4px 10px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <h1>Spending by category</h1>
+  <p><a href="/">Dashboard</a> | <a href="/transactions">Transactions</a></p>
+
+  {% if shares %}
+  <p>Total expenses: <strong>{{ expenses | naira }}</strong></p>
+  <table>
+    {% for category, total, percent in shares %}
+    <tr>
+      <td>{{ category }}</td>
+      <td>{{ total | naira }}</td>
+      <td>{{ percent }}%</td>
+      <td>
+        <div class="bar-track"><div class="bar" style="width: {{ percent }}%"></div></div>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>No expenses yet.</p>
+  {% endif %}
+</body>
+</html>

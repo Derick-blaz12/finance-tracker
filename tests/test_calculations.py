@@ -116,3 +116,19 @@ def test_monthly_summary_month_with_only_expenses():
 
 def test_monthly_summary_when_empty():
     assert calculations.calculate_monthly_summary([]) == []
+
+def test_category_shares():
+    spending = [("Food", 7500), ("Transport", 2500)]
+    assert calculations.category_shares(spending) == [
+        ("Food", 7500, 75.0),
+        ("Transport", 2500, 25.0),
+    ]
+
+
+def test_category_shares_rounds_to_one_decimal():
+    result = calculations.category_shares([("A", 1), ("B", 2)])
+    assert [row[2] for row in result] == [33.3, 66.7]
+
+
+def test_category_shares_empty():
+    assert calculations.category_shares([]) == []
