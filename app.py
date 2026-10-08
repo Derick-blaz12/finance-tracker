@@ -2,6 +2,7 @@ import os
 import secrets
 import sqlite3
 from datetime import date, datetime
+from functools import wraps
 
 from flask import (
     Flask, abort, g, redirect, render_template, request, session, url_for,
@@ -14,6 +15,16 @@ import users
 from input_helpers import CATEGORIES
 from models import Transaction
 from money import format_naira, parse_naira
+
+
+def login_required(view):
+    """Redirect visitors who are not logged in to the login page."""
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+    return wrapped
 
 
 def build_transaction_from_form(form):
@@ -104,7 +115,7 @@ def create_app(db_file=None, secret_key=None):
             if g.user is None:          # account no longer exists
                 session.clear()
 
-    # ---------- accounts ----------
+    # ---------- accounts (public) ----------
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
@@ -144,9 +155,10 @@ def create_app(db_file=None, secret_key=None):
         session.clear()
         return redirect(url_for("login"))
 
-    # ---------- pages ----------
+    # ---------- pages (login required) ----------
 
     @app.route("/")
+    @login_required
     def dashboard():
         rows = database.get_all_transactions(get_db())
         transactions = [t for _, t in rows]
@@ -159,6 +171,7 @@ def create_app(db_file=None, secret_key=None):
         )
 
     @app.route("/transactions")
+    @login_required
     def transactions_page():
         all_rows = database.get_all_transactions(get_db())
         # newest date first; ties broken by id so the order is stable
@@ -193,6 +206,7 @@ def create_app(db_file=None, secret_key=None):
         )
 
     @app.route("/transactions/new", methods=["GET", "POST"])
+    @login_required
     def new_transaction():
         if request.method == "POST":
             t, errors = build_transaction_from_form(request.form)
@@ -210,12 +224,14 @@ def create_app(db_file=None, secret_key=None):
         )
 
     @app.route("/transactions/<int:transaction_id>/delete", methods=["POST"])
+    @login_required
     def delete_transaction(transaction_id):
         if not database.delete_transaction(get_db(), transaction_id):
             abort(404)
         return redirect(url_for("transactions_page"))
 
     @app.route("/transactions/<int:transaction_id>/edit", methods=["GET", "POST"])
+    @login_required
     def edit_transaction(transaction_id):
         existing = database.get_transaction(get_db(), transaction_id)
         if existing is None:
@@ -244,6 +260,7 @@ def create_app(db_file=None, secret_key=None):
         )
 
     @app.route("/breakdown")
+    @login_required
     def breakdown():
         transactions = [t for _, t in database.get_all_transactions(get_db())]
         spending = calculations.calculate_spending_by_category(transactions)

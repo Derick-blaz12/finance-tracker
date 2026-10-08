@@ -1,5 +1,3 @@
-import pytest
-
 from app import create_app
 
 
@@ -13,6 +11,9 @@ def register(client, email="ada@example.com", password="correct horse"):
 
 def login(client, email="ada@example.com", password="correct horse"):
     return client.post("/login", data={"email": email, "password": password})
+
+
+PUBLIC_ENDPOINTS = {"static", "register", "login", "logout"}
 
 
 def test_register_and_login_pages_load(tmp_path):
@@ -87,7 +88,7 @@ def test_logout_clears_the_session(tmp_path):
     client = make_app(tmp_path).test_client()
     register(client)
     assert client.post("/logout").status_code == 302
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/", follow_redirects=True).get_data(as_text=True)
     assert "ada@example.com" not in html
     assert "Log in" in html
 
@@ -117,3 +118,56 @@ def test_missing_secret_key_falls_back_to_a_random_one(tmp_path, monkeypatch):
     second = create_app(str(tmp_path / "b.db")).config["SECRET_KEY"]
     assert first != second
     assert len(first) >= 32
+
+
+# ---------- login required ----------
+
+def test_every_non_public_route_requires_login(tmp_path):
+    """Scans every route, so a future page can't be added without protection."""
+    app = make_app(tmp_path)
+    client = app.test_client()
+    checked = 0
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint in PUBLIC_ENDPOINTS:
+            continue
+        url = rule.rule.replace("<int:transaction_id>", "1")
+        for method in sorted(rule.methods & {"GET", "POST"}):
+            response = client.open(url, method=method)
+            assert response.status_code == 302, (rule.endpoint, method)
+            assert response.headers["Location"].endswith("/login"), (rule.endpoint, method)
+            checked += 1
+    assert checked >= 8
+
+
+def test_anonymous_post_creates_nothing(tmp_path):
+    app = make_app(tmp_path)
+    app.test_client().post("/transactions/new", data={
+        "type": "expense", "description": "Rice", "category": "Food",
+        "amount": "100", "date": "2026-10-07",
+    })
+    user = app.test_client()
+    register(user)
+    assert "No transactions yet." in user.get("/transactions").get_data(as_text=True)
+
+
+def test_logged_in_user_is_redirected_away_from_login_and_register(tmp_path):
+    client = make_app(tmp_path).test_client()
+    register(client)
+    assert client.get("/login").status_code == 302
+    assert client.get("/register").status_code == 302
+
+
+def test_session_for_a_deleted_account_is_rejected(tmp_path):
+    client = make_app(tmp_path).test_client()
+    with client.session_transaction() as sess:
+        sess["user_id"] = 999
+    response = client.get("/")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
+
+
+def test_logged_out_user_loses_access(tmp_path):
+    client = make_app(tmp_path).test_client()
+    register(client)
+    client.post("/logout")
+    assert client.get("/transactions").status_code == 302

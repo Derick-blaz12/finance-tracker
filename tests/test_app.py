@@ -12,7 +12,9 @@ def make_client(tmp_path, transactions=()):
     for t in transactions:
         database.add_transaction(conn, t)
     conn.close()
-    return create_app(db_file).test_client()
+    client = create_app(db_file, secret_key="test-secret").test_client()
+    client.post("/register", data={"email": "ada@example.com", "password": "correct horse"})
+    return client
 
 
 def first_id(tmp_path):
