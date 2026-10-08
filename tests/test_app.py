@@ -18,7 +18,7 @@ def make_client(tmp_path, transactions=()):
     for t in transactions:
         database.add_transaction(conn, user_id, t)
     conn.close()
-    client = create_app(db_file, secret_key="test-secret").test_client()
+    client = create_app(db_file, secret_key="test-secret", csrf=False).test_client()
     client.post("/login", data={"email": EMAIL, "password": PASSWORD})
     return client
 

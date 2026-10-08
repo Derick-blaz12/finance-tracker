@@ -67,6 +67,7 @@
           <form class="inline-form" method="post"
                 action="{{ url_for('delete_transaction', transaction_id=id) }}"
                 onsubmit="return confirm('Delete this transaction?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn btn-small btn-danger" type="submit">Delete</button>
           </form>
         </td>

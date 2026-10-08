@@ -8,6 +8,8 @@ from flask import (
     Flask, abort, g, redirect, render_template, request, session, url_for,
 )
 
+from flask_wtf.csrf import CSRFProtect
+
 import calculations
 import database
 import filters
@@ -75,7 +77,7 @@ def valid_date_or_blank(text):
     return text
 
 
-def create_app(db_file=None, secret_key=None):
+def create_app(db_file=None, secret_key=None, csrf=True):
     app = Flask(__name__)
     app.config["DB_FILE"] = db_file or database.DB_FILE
     app.jinja_env.filters["naira"] = format_naira
@@ -90,6 +92,10 @@ def create_app(db_file=None, secret_key=None):
     app.config["SECRET_KEY"] = secret_key
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+    app.config["WTF_CSRF_ENABLED"] = csrf
+    app.config["WTF_CSRF_TIME_LIMIT"] = None   # token lasts as long as the session
+    CSRFProtect(app)
 
     def get_db():
         """One connection per request, created on first use."""

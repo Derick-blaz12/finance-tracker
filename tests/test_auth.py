@@ -2,7 +2,7 @@ from app import create_app
 
 
 def make_app(tmp_path):
-    return create_app(str(tmp_path / "auth.db"), secret_key="test-secret")
+    return create_app(str(tmp_path / "auth.db"), secret_key="test-secret", csrf=False)
 
 
 def register(client, email="ada@example.com", password="correct horse"):

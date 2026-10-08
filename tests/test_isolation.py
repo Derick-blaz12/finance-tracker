@@ -6,7 +6,7 @@ from app import create_app
 
 def make_two_users(tmp_path):
     db_file = str(tmp_path / "iso.db")
-    app = create_app(db_file, secret_key="test-secret")
+    app = create_app(db_file, secret_key="test-secret", csrf=False)
     ada, grace = app.test_client(), app.test_client()   # separate cookie jars
     ada.post("/register", data={"email": "ada@example.com", "password": "correct horse"})
     grace.post("/register", data={"email": "grace@example.com", "password": "another horse"})

@@ -21,6 +21,7 @@
         <a class="nav-action" href="{{ url_for('new_transaction') }}">+ Add</a>
         <span class="nav-user" title="{{ g.user[1] }}">{{ g.user[1] }}</span>
         <form class="inline-form" method="post" action="{{ url_for('logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-small" type="submit">Log out</button>
         </form>
         {% else %}
