@@ -9,7 +9,7 @@ while learning software engineering fundamentals.
 - Search by keyword, type, exact date, month or date range
 - Statistics: totals, largest and average expense, spending by category, monthly summary
 - SQLite storage with permanent transaction ids
-- 151 automated tests
+- 138 automated tests
 - Money stored as integer kobo, so totals are exact (no floating-point errors)
 
 ## Architecture
@@ -22,7 +22,6 @@ while learning software engineering fundamentals.
 | `input_helpers.py` | asking the user for validated input |
 | `database.py` | SQLite add, read, update, delete by id |
 | `models.py` | `Transaction` dataclass that validates itself |
-| `migrate.py`, `storage.py` | one-time import from the earlier JSON version |
 | `money.py` | naira text to integer kobo and back |
 
 ## Run it
@@ -43,3 +42,7 @@ part of the repository.
 - Replacing loose dictionaries with a validated class
 - Parameterized SQL, commits, and database ids vs list positions
 - Testing with fake input and in-memory databases
+
+## History
+Early versions stored data in a JSON file. That code was removed after the
+move to SQLite; it remains in the Git history (see the `v2.0` tag).
