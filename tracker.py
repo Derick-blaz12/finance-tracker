@@ -14,11 +14,12 @@ from models import Transaction
 from money import format_naira
 
 connection = None  # set by main.py (and by the tests)
+user_id = None     # the logged-in user's id, set by main.py (and by the tests)
 
 
 def load_rows():
-    """Return [(id, Transaction), ...] from the database."""
-    return database.get_all_transactions(connection)
+    """Return [(id, Transaction), ...] for the logged-in user."""
+    return database.get_all_transactions(connection, user_id)
 
 
 def load_transactions():
@@ -60,7 +61,7 @@ def delete_transaction():
     row_id, t = rows[number - 1]  # screen number -> database id
     confirm = input(f"Delete '{t.description}' ({format_naira(t.amount)})? (y/n): ").strip().lower()
     if confirm == "y":
-        database.delete_transaction(connection, row_id)
+        database.delete_transaction(connection, user_id, row_id)
         print("Transaction deleted.")
     else:
         print("Cancelled.")
@@ -100,13 +101,13 @@ def edit_transaction():
 
     field = fields[choice - 1]
     if field == "Description":
-        database.update_transaction(connection, row_id, "description", get_description())
+        database.update_transaction(connection, user_id, row_id, "description", get_description())
     elif field == "Category":
-        database.update_transaction(connection, row_id, "category", get_category())
+        database.update_transaction(connection, user_id, row_id, "category", get_category())
     elif field == "Amount":
-        database.update_transaction(connection, row_id, "amount", get_amount())
+        database.update_transaction(connection, user_id, row_id, "amount", get_amount())
     elif field == "Date":
-        database.update_transaction(connection, row_id, "date", get_date())
+        database.update_transaction(connection, user_id, row_id, "date", get_date())
 
     print(f"{field} updated!")
 
@@ -308,5 +309,5 @@ def add_transaction(kind):
     amount = get_amount()
     transaction_date = get_date()
     t = Transaction(kind, description, amount, transaction_date, category)
-    database.add_transaction(connection, t)
+    database.add_transaction(connection, user_id, t)
     print(f"{kind.capitalize()} added!")

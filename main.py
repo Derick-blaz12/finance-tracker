@@ -1,7 +1,24 @@
+import getpass
+
 import calculations
 import database
 import tracker
+import users
 from money import format_naira
+
+MAX_LOGIN_ATTEMPTS = 3
+
+
+def log_in(connection):
+    """Ask for email and password. Return the user's id, or None after 3 failures."""
+    for _ in range(MAX_LOGIN_ATTEMPTS):
+        email = input("Email: ")
+        password = getpass.getpass("Password: ")
+        user_id = users.authenticate(connection, email, password)
+        if user_id is not None:
+            return user_id
+        print("Incorrect email or password.")
+    return None
 
 
 def show_menu():
@@ -22,8 +39,15 @@ def show_menu():
 def main():
     tracker.connection = database.connect()
     database.create_table(tracker.connection)
+    users.create_users_table(tracker.connection)
 
     try:
+        print("Log in with the account you created in the web app.")
+        tracker.user_id = log_in(tracker.connection)
+        if tracker.user_id is None:
+            print("Too many failed attempts.")
+            return
+
         while True:
             show_menu()
             choice = input("Choose an option (1-11): ").strip()

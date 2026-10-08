@@ -155,12 +155,12 @@ def create_app(db_file=None, secret_key=None):
         session.clear()
         return redirect(url_for("login"))
 
-    # ---------- pages (login required) ----------
+    # ---------- pages (login required, scoped to the logged-in user) ----------
 
     @app.route("/")
     @login_required
     def dashboard():
-        rows = database.get_all_transactions(get_db())
+        rows = database.get_all_transactions(get_db(), g.user[0])
         transactions = [t for _, t in rows]
         return render_template(
             "dashboard.html",
@@ -173,7 +173,7 @@ def create_app(db_file=None, secret_key=None):
     @app.route("/transactions")
     @login_required
     def transactions_page():
-        all_rows = database.get_all_transactions(get_db())
+        all_rows = database.get_all_transactions(get_db(), g.user[0])
         # newest date first; ties broken by id so the order is stable
         all_rows.sort(key=lambda row: (row[1].date, row[0]), reverse=True)
 
@@ -211,7 +211,7 @@ def create_app(db_file=None, secret_key=None):
         if request.method == "POST":
             t, errors = build_transaction_from_form(request.form)
             if t is not None:
-                database.add_transaction(get_db(), t)
+                database.add_transaction(get_db(), g.user[0], t)
                 return redirect(url_for("transactions_page"))
             return render_template(
                 "transaction_form.html",
@@ -226,21 +226,22 @@ def create_app(db_file=None, secret_key=None):
     @app.route("/transactions/<int:transaction_id>/delete", methods=["POST"])
     @login_required
     def delete_transaction(transaction_id):
-        if not database.delete_transaction(get_db(), transaction_id):
+        if not database.delete_transaction(get_db(), g.user[0], transaction_id):
             abort(404)
         return redirect(url_for("transactions_page"))
 
     @app.route("/transactions/<int:transaction_id>/edit", methods=["GET", "POST"])
     @login_required
     def edit_transaction(transaction_id):
-        existing = database.get_transaction(get_db(), transaction_id)
+        existing = database.get_transaction(get_db(), g.user[0], transaction_id)
         if existing is None:
             abort(404)
 
         if request.method == "POST":
             t, errors = build_transaction_from_form(request.form)
             if t is not None:
-                database.replace_transaction(get_db(), transaction_id, t)
+                if not database.replace_transaction(get_db(), g.user[0], transaction_id, t):
+                    abort(404)
                 return redirect(url_for("transactions_page"))
             return render_template(
                 "transaction_form.html", errors=errors, form=request.form,
@@ -262,7 +263,8 @@ def create_app(db_file=None, secret_key=None):
     @app.route("/breakdown")
     @login_required
     def breakdown():
-        transactions = [t for _, t in database.get_all_transactions(get_db())]
+        rows = database.get_all_transactions(get_db(), g.user[0])
+        transactions = [t for _, t in rows]
         spending = calculations.calculate_spending_by_category(transactions)
         return render_template(
             "breakdown.html",

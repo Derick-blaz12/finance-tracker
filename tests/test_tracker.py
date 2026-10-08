@@ -7,13 +7,16 @@ import tracker
 from helpers import fake_inputs
 from models import Transaction
 
+USER_ID = 1
+
 
 @pytest.fixture(autouse=True)
 def database_connection(monkeypatch):
-    """A fresh in-memory database for every test. Your real finance.db is never touched."""
+    """A fresh in-memory database and a logged-in user for every test."""
     connection = sqlite3.connect(":memory:")
     database.create_table(connection)
     monkeypatch.setattr(tracker, "connection", connection)
+    monkeypatch.setattr(tracker, "user_id", USER_ID)
     yield connection
     connection.close()
 
@@ -21,7 +24,7 @@ def database_connection(monkeypatch):
 def add(kind, description, amount, category=None, date="2026-10-04"):
     """Test helper: put a transaction straight into the database. Amount is in kobo."""
     database.add_transaction(
-        tracker.connection, Transaction(kind, description, amount, date, category)
+        tracker.connection, USER_ID, Transaction(kind, description, amount, date, category)
     )
 
 

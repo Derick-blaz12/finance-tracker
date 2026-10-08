@@ -1,25 +1,31 @@
 import sqlite3
 
 import database
+import users
 from app import create_app
 from models import Transaction
+
+EMAIL = "ada@example.com"
+PASSWORD = "correct horse"
 
 
 def make_client(tmp_path, transactions=()):
     db_file = str(tmp_path / "test_web.db")
     conn = sqlite3.connect(db_file)
     database.create_table(conn)
+    users.create_users_table(conn)
+    user_id = users.create_user(conn, EMAIL, PASSWORD)
     for t in transactions:
-        database.add_transaction(conn, t)
+        database.add_transaction(conn, user_id, t)
     conn.close()
     client = create_app(db_file, secret_key="test-secret").test_client()
-    client.post("/register", data={"email": "ada@example.com", "password": "correct horse"})
+    client.post("/login", data={"email": EMAIL, "password": PASSWORD})
     return client
 
 
 def first_id(tmp_path):
     conn = sqlite3.connect(str(tmp_path / "test_web.db"))
-    row_id = database.get_all_transactions(conn)[0][0]
+    row_id = database.get_all_transactions(conn, 1)[0][0]
     conn.close()
     return row_id
 
