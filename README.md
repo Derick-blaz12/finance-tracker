@@ -9,7 +9,7 @@ while learning software engineering fundamentals.
 - Search by keyword, type, exact date, month or date range
 - Statistics: totals, largest and average expense, spending by category, monthly summary
 - SQLite storage with permanent transaction ids
-- 138 automated tests
+- 265 automated tests
 - Money stored as integer kobo, so totals are exact (no floating-point errors)
 
 ## Architecture
@@ -23,6 +23,11 @@ while learning software engineering fundamentals.
 | `database.py` | SQLite add, read, update, delete by id |
 | `models.py` | `Transaction` dataclass that validates itself |
 | `money.py` | naira text to integer kobo and back |
+| `app.py` |  |
+| `users.py` |  |
+| `ratelimit.py` |  |
+| `templates/` |  |
+| `static/` |  |
 
 ## Run it
     python main.py
@@ -46,3 +51,19 @@ part of the repository.
 ## History
 Early versions stored data in a JSON file. That code was removed after the
 move to SQLite; it remains in the Git history (see the `v2.0` tag).
+
+## Run the web app
+    $env:SECRET_KEY = python -c "import secrets; print(secrets.token_hex(32))"
+    python -m flask --app app:create_app run --debug
+
+## Security
+- Passwords hashed (werkzeug), emails unique and case-insensitive
+- Every query scoped to the logged-in user, tested with two accounts
+- CSRF tokens on every POST form
+- Failed-login rate limiting by email and IP
+- `SECRET_KEY` and `PRODUCTION=1` come from environment variables, never the repo
+
+## Before deploying
+- Run with gunicorn behind HTTPS, set `PRODUCTION=1`
+- Configure trusted proxy headers so rate limiting sees real client IPs
+- Put the SQLite file on persistent disk and back it up
