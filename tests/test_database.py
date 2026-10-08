@@ -140,3 +140,49 @@ def test_replace_transaction_overwrites_all_fields(conn):
     assert database.replace_transaction(conn, new_id, replacement) is True
     assert database.get_transaction(conn, new_id) == replacement
     assert database.replace_transaction(conn, 999, replacement) is False
+
+def user_id_column_exists(connection):
+    return "user_id" in [r[1] for r in connection.execute("PRAGMA table_info(transactions)")]
+
+
+def test_new_table_has_user_id_column(conn):
+    assert user_id_column_exists(conn)
+
+
+def test_ensure_adds_column_to_an_old_table():
+    old = sqlite3.connect(":memory:")
+    old.execute("""CREATE TABLE transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL,
+        description TEXT NOT NULL, amount INTEGER NOT NULL,
+        date TEXT NOT NULL, category TEXT)""")
+    old.execute("INSERT INTO transactions (type, description, amount, date) "
+                "VALUES ('income', 'Salary', 100, '2026-10-01')")
+    old.commit()
+    assert not user_id_column_exists(old)
+
+    database.ensure_user_id_column(old)
+
+    assert user_id_column_exists(old)
+    assert old.execute("SELECT user_id FROM transactions").fetchone() == (None,)
+    assert len(database.get_all_transactions(old)) == 1   # existing data still readable
+
+
+def test_ensure_user_id_column_twice_is_fine(conn):
+    database.ensure_user_id_column(conn)
+    database.ensure_user_id_column(conn)
+
+
+def test_assign_unowned_only_touches_rows_without_an_owner(conn):
+    first = database.add_transaction(conn, expense("A"))
+    database.add_transaction(conn, expense("B"))
+    conn.execute("UPDATE transactions SET user_id = 2 WHERE id = ?", (first,))
+    conn.commit()
+
+    assert database.assign_unowned_transactions(conn, 1) == 1
+    owners = dict(conn.execute("SELECT id, user_id FROM transactions"))
+    assert owners[first] == 2          # kept its owner
+    assert owners[first + 1] == 1      # was unowned, now assigned
+
+
+def test_assign_unowned_returns_zero_when_nothing_to_assign(conn):
+    assert database.assign_unowned_transactions(conn, 1) == 0

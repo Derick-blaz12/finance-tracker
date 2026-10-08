@@ -20,10 +20,12 @@ def create_table(connection):
             description TEXT NOT NULL,
             amount INTEGER NOT NULL,
             date TEXT NOT NULL,
-            category TEXT
+            category TEXT,
+            user_id INTEGER
         )
     """)
     connection.commit()
+    ensure_user_id_column(connection)
 
 
 def add_transaction(connection, t):
@@ -142,3 +144,22 @@ def get_transaction(connection, transaction_id):
     if row is None:
         return None
     return Transaction.from_dict(dict(zip(COLUMNS, row)))
+
+def ensure_user_id_column(connection):
+    """Add the user_id column to an older table. Safe to run repeatedly."""
+    columns = [row[1] for row in connection.execute("PRAGMA table_info(transactions)")]
+    if "user_id" not in columns:
+        connection.execute("ALTER TABLE transactions ADD COLUMN user_id INTEGER")
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id)"
+    )
+    connection.commit()
+
+
+def assign_unowned_transactions(connection, user_id):
+    """Give every transaction that has no owner to this user. Returns how many."""
+    cursor = connection.execute(
+        "UPDATE transactions SET user_id = ? WHERE user_id IS NULL", (user_id,)
+    )
+    connection.commit()
+    return cursor.rowcount
