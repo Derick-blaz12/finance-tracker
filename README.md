@@ -9,7 +9,8 @@ while learning software engineering fundamentals.
 - Search by keyword, type, exact date, month or date range
 - Statistics: totals, largest and average expense, spending by category, monthly summary
 - SQLite storage with permanent transaction ids
-- 119 automated tests
+- 151 automated tests
+- Money stored as integer kobo, so totals are exact (no floating-point errors)
 
 ## Architecture
 | File | Job |
@@ -22,6 +23,7 @@ while learning software engineering fundamentals.
 | `database.py` | SQLite add, read, update, delete by id |
 | `models.py` | `Transaction` dataclass that validates itself |
 | `migrate.py`, `storage.py` | one-time import from the earlier JSON version |
+| `money.py` | naira text to integer kobo and back |
 
 ## Run it
     python main.py
@@ -31,7 +33,7 @@ while learning software engineering fundamentals.
 ## Run the tests
     pip install -r requirements.txt
     python -m pytest -q
-    
+
 Your data lives in `finance.db`, which is created on first run and is not
 part of the repository.
 
