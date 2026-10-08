@@ -127,3 +127,16 @@ def test_convert_old_real_table_to_kobo():
 
 def test_convert_twice_does_nothing(conn):
     assert database.convert_amounts_to_kobo(conn) == 0
+
+def test_get_transaction_by_id(conn):
+    new_id = database.add_transaction(conn, expense())
+    assert database.get_transaction(conn, new_id) == expense()
+    assert database.get_transaction(conn, 999) is None
+
+
+def test_replace_transaction_overwrites_all_fields(conn):
+    new_id = database.add_transaction(conn, expense())
+    replacement = Transaction("income", "Gift", 700, "2026-10-05")
+    assert database.replace_transaction(conn, new_id, replacement) is True
+    assert database.get_transaction(conn, new_id) == replacement
+    assert database.replace_transaction(conn, 999, replacement) is False

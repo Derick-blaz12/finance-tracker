@@ -117,3 +117,28 @@ def convert_amounts_to_kobo(connection):
         COMMIT;
     """)
     return count
+
+def replace_transaction(connection, transaction_id, t):
+    """Overwrite every field of a row with a validated Transaction.
+
+    Returns False if the id doesn't exist.
+    """
+    cursor = connection.execute(
+        "UPDATE transactions "
+        "SET type = ?, description = ?, amount = ?, date = ?, category = ? "
+        "WHERE id = ?",
+        (t.type, t.description, t.amount, t.date, t.category, transaction_id),
+    )
+    connection.commit()
+    return cursor.rowcount == 1
+
+def get_transaction(connection, transaction_id):
+    """Return the Transaction with this id, or None if it doesn't exist."""
+    row = connection.execute(
+        "SELECT type, description, amount, date, category "
+        "FROM transactions WHERE id = ?",
+        (transaction_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return Transaction.from_dict(dict(zip(COLUMNS, row)))

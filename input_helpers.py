@@ -52,10 +52,11 @@ def get_month():
             continue
         return f"{parsed.year:04d}-{parsed.month:02d}"
 
+CATEGORIES = ["Food", "Transport", "Shopping", "Bills", "Health", "Entertainment", "Other"]
 
 def get_category():
     """Show a numbered list of categories and return the one the user picks."""
-    categories = ["Food", "Transport", "Shopping", "Bills", "Health", "Entertainment", "Other"]
+    categories = CATEGORIES
     print("Categories:")
     for i, name in enumerate(categories, start=1):
         print(f"  {i}. {name}")

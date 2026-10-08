@@ -8,11 +8,12 @@
 <body>
   <h1>Transactions</h1>
   <p><a href="/">Dashboard</a></p>
+  <p><a href="/transactions/new">Add transaction</a></p>
 
   {% if rows %}
   <table border="1" cellpadding="6">
     <tr>
-      <th>Date</th><th>Type</th><th>Description</th><th>Category</th><th>Amount</th>
+      <th>Date</th><th>Type</th><th>Description</th><th>Category</th><th>Amount</th><th></th>
     </tr>
     {% for id, t in rows %}
     <tr>
@@ -21,6 +22,13 @@
       <td>{{ t.description }}</td>
       <td>{{ t.category or "" }}</td>
       <td>{{ t.amount | naira }}</td>
+      <td>
+        <a href="/transactions/{{ id }}/edit">Edit</a>
+        <form method="post" action="/transactions/{{ id }}/delete" style="display:inline"
+              onsubmit="return confirm('Delete this transaction?');">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
     </tr>
     {% endfor %}
   </table>

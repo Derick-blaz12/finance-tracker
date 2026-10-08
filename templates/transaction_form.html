@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add transaction - Finance Tracker</title>
+</head>
+<body>
+  <h1>{% if editing %}Edit transaction{% else %}Add transaction{% endif %}</h1>
+  <p><a href="/transactions">Back to transactions</a></p>
+
+  {% if errors %}
+  <ul style="color: red;">
+    {% for message in errors %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <form method="post">
+    <p>
+      Type:
+      <label><input type="radio" name="type" value="expense"
+        {% if form.get("type", "expense") == "expense" %}checked{% endif %}> Expense</label>
+      <label><input type="radio" name="type" value="income"
+        {% if form.get("type") == "income" %}checked{% endif %}> Income</label>
+    </p>
+    <p>
+      <label>Description:
+        <input type="text" name="description" value="{{ form.get('description', '') }}">
+      </label>
+    </p>
+    <p>
+      <label>Category (expenses only):
+        <input type="text" name="category" list="category-options"
+               value="{{ form.get('category', '') }}">
+      </label>
+      <datalist id="category-options">
+        {% for name in categories %}<option value="{{ name }}">{% endfor %}
+      </datalist>
+    </p>
+    <p>
+      <label>Amount (₦):
+        <input type="text" name="amount" value="{{ form.get('amount', '') }}">
+      </label>
+    </p>
+    <p>
+      <label>Date (YYYY-MM-DD):
+        <input type="text" name="date" value="{{ form.get('date', '') }}">
+      </label>
+    </p>
+    <button type="submit">Save</button>
+  </form>
+</body>
+</html>
