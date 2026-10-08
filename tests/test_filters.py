@@ -51,3 +51,49 @@ def test_range_single_day():
 def test_range_start_after_end_raises():
     with pytest.raises(ValueError):
         filters.filter_by_range(sample(), "2026-10-07", "2026-10-01")
+
+def rows():
+    return [
+        (1, Transaction("income", "Salary", 5000000, "2026-10-01")),
+        (2, Transaction("expense", "Rice", 500000, "2026-10-07", "Food")),
+        (5, Transaction("expense", "Bus fare", 200000, "2026-09-28", "Transport")),
+    ]
+
+
+def ids(result):
+    return [row_id for row_id, _ in result]
+
+
+def test_filter_rows_no_criteria_returns_everything():
+    assert ids(filters.filter_rows(rows())) == [1, 2, 5]
+
+
+def test_filter_rows_keyword_matches_description_case_insensitively():
+    assert ids(filters.filter_rows(rows(), keyword="RICE")) == [2]
+
+
+def test_filter_rows_keyword_matches_category():
+    assert ids(filters.filter_rows(rows(), keyword="transport")) == [5]
+
+
+def test_filter_rows_by_type():
+    assert ids(filters.filter_rows(rows(), kind="expense")) == [2, 5]
+
+
+def test_filter_rows_date_range_includes_both_ends():
+    assert ids(filters.filter_rows(rows(), start="2026-10-01", end="2026-10-07")) == [1, 2]
+
+
+def test_filter_rows_open_ended_ranges():
+    assert ids(filters.filter_rows(rows(), start="2026-10-02")) == [2]
+    assert ids(filters.filter_rows(rows(), end="2026-09-30")) == [5]
+
+
+def test_filter_rows_combines_criteria():
+    result = filters.filter_rows(rows(), keyword="o", kind="expense", start="2026-10-01")
+    assert ids(result) == [2]
+
+
+def test_filter_rows_start_after_end_raises():
+    with pytest.raises(ValueError):
+        filters.filter_rows(rows(), start="2026-10-07", end="2026-10-01")

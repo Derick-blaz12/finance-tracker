@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 from flask import Flask, abort, g, redirect, render_template, request, url_for
 
+import filters
 import calculations
 import database
 from input_helpers import CATEGORIES
@@ -47,6 +48,14 @@ def build_transaction_from_form(form):
         return None, [str(e)]
     return t, []
 
+def valid_date_or_blank(text):
+    """Return text if it is a real YYYY-MM-DD date, otherwise None."""
+    try:
+        datetime.strptime(text, "%Y-%m-%d")
+    except ValueError:
+        return None
+    return text
+
 def create_app(db_file=None):
     app = Flask(__name__)
     app.config["DB_FILE"] = db_file or database.DB_FILE
@@ -78,11 +87,37 @@ def create_app(db_file=None):
 
     @app.route("/transactions")
     def transactions_page():
-        rows = database.get_all_transactions(get_db())
+        all_rows = database.get_all_transactions(get_db())
         # newest date first; ties broken by id so the order is stable
-        rows.sort(key=lambda row: (row[1].date, row[0]), reverse=True)
-        return render_template("transactions.html", rows=rows)
+        all_rows.sort(key=lambda row: (row[1].date, row[0]), reverse=True)
 
+        q = request.args.get("q", "").strip()
+        kind = request.args.get("type", "")
+        start = request.args.get("start", "").strip()
+        end = request.args.get("end", "").strip()
+        errors = []
+
+        if kind not in ("income", "expense"):
+            kind = ""
+        if start and valid_date_or_blank(start) is None:
+            errors.append("Start date must be a real date in YYYY-MM-DD format.")
+            start = ""
+        if end and valid_date_or_blank(end) is None:
+            errors.append("End date must be a real date in YYYY-MM-DD format.")
+            end = ""
+        if start and end and start > end:
+            errors.append("Start date cannot be after the end date.")
+            start = end = ""
+
+        rows = filters.filter_rows(all_rows, q, kind, start, end)
+        return render_template(
+            "transactions.html",
+            rows=rows,
+            total=len(all_rows),
+            errors=errors,
+            filtering=bool(q or kind or start or end),
+            q=q, kind=kind, start=start, end=end,
+        )
     @app.route("/transactions/new", methods=["GET", "POST"])
     def new_transaction():
         if request.method == "POST":

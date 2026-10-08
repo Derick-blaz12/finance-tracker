@@ -28,3 +28,30 @@ def filter_by_range(transactions, start, end):
         if start <= t.date <= end:
             results.append((i, t))
     return results
+
+def filter_rows(rows, keyword="", kind="", start="", end=""):
+    """Filter (id, Transaction) pairs. Empty criteria are ignored.
+
+    keyword: matches description or category, case-insensitive
+    kind: "income" or "expense"
+    start, end: YYYY-MM-DD, both included
+
+    Raises ValueError if start is after end.
+    """
+    if start and end and start > end:
+        raise ValueError("Start date must not be after the end date.")
+
+    keyword = keyword.strip().lower()
+    results = []
+    for row_id, t in rows:
+        if keyword and keyword not in t.description.lower() \
+                and keyword not in (t.category or "").lower():
+            continue
+        if kind and t.type != kind:
+            continue
+        if start and t.date < start:
+            continue
+        if end and t.date > end:
+            continue
+        results.append((row_id, t))
+    return results

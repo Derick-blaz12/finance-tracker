@@ -189,3 +189,55 @@ def test_edit_with_invalid_data_changes_nothing(tmp_path):
 def test_edit_missing_id_is_404(tmp_path):
     client = make_client(tmp_path)
     assert client.get("/transactions/999/edit").status_code == 404
+
+def search_client(tmp_path):
+    return make_client(tmp_path, [
+        Transaction("income", "Salary", 5000000, "2026-10-01"),
+        Transaction("expense", "Rice", 500000, "2026-10-07", "Food"),
+        Transaction("expense", "Bus fare", 200000, "2026-09-28", "Transport"),
+    ])
+
+
+def test_search_by_keyword(tmp_path):
+    html = search_client(tmp_path).get("/transactions?q=rice").get_data(as_text=True)
+    assert "Rice" in html
+    assert "Salary" not in html
+    assert "Showing 1 of 3" in html
+
+
+def test_search_by_type(tmp_path):
+    html = search_client(tmp_path).get("/transactions?type=income").get_data(as_text=True)
+    assert "Salary" in html
+    assert "Rice" not in html
+
+
+def test_search_by_date_range(tmp_path):
+    html = search_client(tmp_path).get(
+        "/transactions?start=2026-10-01&end=2026-10-31"
+    ).get_data(as_text=True)
+    assert "Salary" in html and "Rice" in html
+    assert "Bus fare" not in html
+
+
+def test_search_with_no_match(tmp_path):
+    html = search_client(tmp_path).get("/transactions?q=zzz").get_data(as_text=True)
+    assert "No transactions match your search." in html
+
+
+def test_search_invalid_date_shows_error_and_does_not_crash(tmp_path):
+    response = search_client(tmp_path).get("/transactions?start=abc")
+    assert response.status_code == 200
+    assert "must be a real date" in response.get_data(as_text=True)
+
+
+def test_search_start_after_end_shows_error(tmp_path):
+    html = search_client(tmp_path).get(
+        "/transactions?start=2026-10-07&end=2026-10-01"
+    ).get_data(as_text=True)
+    assert "cannot be after" in html
+
+
+def test_filtered_rows_keep_their_real_ids(tmp_path):
+    html = search_client(tmp_path).get("/transactions?q=bus").get_data(as_text=True)
+    assert "/transactions/3/edit" in html
+    assert "/transactions/1/edit" not in html
