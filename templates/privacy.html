@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Privacy{% endblock %}
+
+{% block content %}
+<h1>Privacy and your data</h1>
+<p class="meta">This is a learning project and a demo, not a commercial service.
+Please use made-up or low-sensitivity data, and never enter account numbers,
+card details or anything you couldn't tolerate losing.</p>
+
+<h2>What is stored</h2>
+<ul>
+  <li>Your email address (lowercased).</li>
+  <li>A salted hash of your password. The password itself is never stored.</li>
+  <li>Your transactions: date, type, description, category and amount.</li>
+  <li>Recent failed login attempts (email and IP address), deleted after 15 minutes.</li>
+</ul>
+
+<h2>Who can see it</h2>
+<p>Other users cannot see your data. The person running the app can technically
+read the database, including your transactions, because they are not encrypted
+inside it. Passwords cannot be read, only verified.</p>
+
+<h2>Your control</h2>
+<ul>
+  <li><strong>Export:</strong> download all your transactions as CSV from the Account page.</li>
+  <li><strong>Delete:</strong> permanently remove your account and every transaction from the Account page.</li>
+</ul>
+
+<h2>Backups</h2>
+<p>If backups are made, they may keep a copy of deleted data until they are
+replaced. Backups are kept only by the person running the app.</p>
+
+<h2>If the project is shut down</h2>
+<p>This is a hobby project with no guarantees. If it is stopped, export your
+data first. Do not rely on it as your only record.</p>
+{% endblock %}

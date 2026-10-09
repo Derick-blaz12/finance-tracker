@@ -313,6 +313,10 @@ def create_app(db_file=None, secret_key=None, csrf=True):
         response.headers["Referrer-Policy"] = "same-origin"
         return response
 
+    @app.route("/privacy")
+    def privacy():
+        return render_template("privacy.html")
+
     @app.route("/export.csv")
     @login_required
     def export_csv():

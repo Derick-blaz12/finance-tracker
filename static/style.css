@@ -176,3 +176,6 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, a:focus-visible {
   color: var(--muted); font-size: 0.85rem; max-width: 180px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 0.4rem;
 }
+.site-footer { 
+  padding-top: 1rem; padding-bottom: 2rem; color: var(--muted); font-size: 0.85rem; 
+}

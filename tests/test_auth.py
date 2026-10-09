@@ -13,8 +13,7 @@ def login(client, email="ada@example.com", password="correct horse"):
     return client.post("/login", data={"email": email, "password": password})
 
 
-PUBLIC_ENDPOINTS = {"static", "register", "login", "logout"}
-
+PUBLIC_ENDPOINTS = {"static", "register", "login", "logout", "privacy"}
 
 def test_register_and_login_pages_load(tmp_path):
     client = make_app(tmp_path).test_client()
