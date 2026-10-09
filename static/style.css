@@ -179,3 +179,40 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, a:focus-visible {
 .site-footer { 
   padding-top: 1rem; padding-bottom: 2rem; color: var(--muted); font-size: 0.85rem; 
 }
+
+/* ---------- header layout and account menu ---------- */
+.header-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.desktop-account { display: flex; align-items: center; gap: 0.25rem; }
+.desktop-account > a { padding: 0.4rem 0.7rem; border-radius: var(--radius); text-decoration: none; color: var(--muted); }
+.desktop-account > a:hover { background: var(--bg); color: var(--text); }
+.desktop-account > a.active { color: var(--primary); background: #eaf1ff; font-weight: 600; }
+
+/* the icon menu is for phones only */
+.user-menu { display: none; position: relative; }
+.user-menu summary { list-style: none; }
+.user-menu summary::-webkit-details-marker { display: none; }
+
+@media (max-width: 640px) {
+  .header-inner { display: block; }
+  .header-top { width: 100%; margin-bottom: 0.5rem; }
+  .desktop-account { display: none; }
+
+  .user-menu { display: block; }
+  .user-menu summary {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border: 1px solid var(--border);
+    border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer;
+  }
+  .user-menu[open] summary { color: var(--primary); border-color: var(--primary); }
+  .user-menu-panel {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    position: absolute; right: 0; top: calc(100% + 0.4rem); z-index: 10;
+    min-width: 210px; max-width: 80vw; padding: 0.75rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  }
+  .user-menu-panel .nav-user { max-width: none; padding: 0 0.4rem 0.4rem; border-bottom: 1px solid var(--border); }
+  .user-menu-panel > a { padding: 0.4rem; text-decoration: none; color: var(--text); }
+  .user-menu-panel .inline-form .btn { width: 100%; }
+}

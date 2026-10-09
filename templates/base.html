@@ -9,7 +9,30 @@
 <body>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="{{ url_for('dashboard') }}">Finance Tracker</a>
+      <div class="header-top">
+        <a class="brand" href="{{ url_for('dashboard') }}">Finance Tracker</a>
+
+        {% if g.user %}
+        <details class="user-menu">
+          <summary class="user-icon" aria-label="Account menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path>
+            </svg>
+          </summary>
+          <div class="user-menu-panel">
+            <span class="nav-user" title="{{ g.user[1] }}">{{ g.user[1] }}</span>
+            <a href="{{ url_for('account') }}">Account</a>
+            <form class="inline-form" method="post" action="{{ url_for('logout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-small" type="submit">Log out</button>
+            </form>
+          </div>
+        </details>
+        {% endif %}
+      </div>
+
       <nav class="nav">
         {% if g.user %}
         <a href="{{ url_for('dashboard') }}"
@@ -18,14 +41,17 @@
            {% if request.endpoint in ('transactions_page', 'edit_transaction') %}class="active"{% endif %}>Transactions</a>
         <a href="{{ url_for('breakdown') }}"
            {% if request.endpoint == 'breakdown' %}class="active"{% endif %}>Breakdown</a>
-        <a href="{{ url_for('account') }}"
-           {% if request.endpoint == 'account' %}class="active"{% endif %}>Account</a>
         <a class="nav-action" href="{{ url_for('new_transaction') }}">+ Add</a>
-        <span class="nav-user" title="{{ g.user[1] }}">{{ g.user[1] }}</span>
-        <form class="inline-form" method="post" action="{{ url_for('logout') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-small" type="submit">Log out</button>
-        </form>
+
+        <div class="desktop-account">
+          <a href="{{ url_for('account') }}"
+             {% if request.endpoint == 'account' %}class="active"{% endif %}>Account</a>
+          <span class="nav-user" title="{{ g.user[1] }}">{{ g.user[1] }}</span>
+          <form class="inline-form" method="post" action="{{ url_for('logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-small" type="submit">Log out</button>
+          </form>
+        </div>
         {% else %}
         <a href="{{ url_for('login') }}"
            {% if request.endpoint == 'login' %}class="active"{% endif %}>Log in</a>
