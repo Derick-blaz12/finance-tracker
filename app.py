@@ -1,21 +1,19 @@
 import os
 import secrets
 import sqlite3
-import ratelimit
 from datetime import date, datetime
 from functools import wraps
 
 from flask import (
     Flask, abort, g, redirect, render_template, request, session, url_for,
 )
-
 from flask_wtf.csrf import CSRFProtect
-
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import calculations
 import database
 import filters
+import ratelimit
 import users
 from input_helpers import CATEGORIES
 from models import Transaction
@@ -83,6 +81,13 @@ def valid_date_or_blank(text):
 def create_app(db_file=None, secret_key=None, csrf=True):
     app = Flask(__name__)
     app.config["DB_FILE"] = db_file or os.environ.get("DATABASE_FILE") or database.DB_FILE
+    if os.environ.get("PRODUCTION") == "1":
+        db_folder = os.path.dirname(os.path.abspath(app.config["DB_FILE"]))
+        if not os.path.isdir(db_folder):
+            raise RuntimeError(
+                f"Database folder does not exist: {db_folder}. "
+                "Check DATABASE_FILE and that the persistent disk is mounted."
+            )
     if os.environ.get("TRUSTED_PROXIES") == "1":
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     app.jinja_env.filters["naira"] = format_naira
@@ -100,7 +105,6 @@ def create_app(db_file=None, secret_key=None, csrf=True):
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = os.environ.get("PRODUCTION") == "1"
-
     app.config["WTF_CSRF_ENABLED"] = csrf
     app.config["WTF_CSRF_TIME_LIMIT"] = None   # token lasts as long as the session
     CSRFProtect(app)
@@ -109,9 +113,9 @@ def create_app(db_file=None, secret_key=None, csrf=True):
         """One connection per request, created on first use."""
         if "db" not in g:
             g.db = sqlite3.connect(app.config["DB_FILE"])
-            ratelimit.create_table(g.db)
             database.create_table(g.db)
             users.create_users_table(g.db)
+            ratelimit.create_table(g.db)
         return g.db
 
     @app.teardown_appcontext
@@ -178,7 +182,7 @@ def create_app(db_file=None, secret_key=None, csrf=True):
             session["user_id"] = user_id
             return redirect(url_for("dashboard"))
         return render_template("login.html", errors=[], email="")
-    
+
     @app.route("/logout", methods=["POST"])
     def logout():
         session.clear()
@@ -300,6 +304,13 @@ def create_app(db_file=None, secret_key=None, csrf=True):
             shares=calculations.category_shares(spending),
             expenses=calculations.total_expenses(transactions),
         )
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "same-origin"
+        return response
 
     @app.errorhandler(400)
     @app.errorhandler(404)

@@ -9,3 +9,4 @@ transactions_old.json
 __pycache__/
 .pytest_cache/
 .venv/
+backups/
