@@ -1,8 +1,6 @@
 import csv
 import io
 
-from money import format_naira  # noqa: F401  (kept so amounts stay consistent)
-
 HEADER = ["date", "type", "description", "category", "amount_naira"]
 
 

@@ -18,6 +18,8 @@
            {% if request.endpoint in ('transactions_page', 'edit_transaction') %}class="active"{% endif %}>Transactions</a>
         <a href="{{ url_for('breakdown') }}"
            {% if request.endpoint == 'breakdown' %}class="active"{% endif %}>Breakdown</a>
+        <a href="{{ url_for('account') }}"
+           {% if request.endpoint == 'account' %}class="active"{% endif %}>Account</a>
         <a class="nav-action" href="{{ url_for('new_transaction') }}">+ Add</a>
         <span class="nav-user" title="{{ g.user[1] }}">{{ g.user[1] }}</span>
         <form class="inline-form" method="post" action="{{ url_for('logout') }}">

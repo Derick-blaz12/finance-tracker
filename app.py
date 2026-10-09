@@ -5,12 +5,13 @@ from datetime import date, datetime
 from functools import wraps
 
 from flask import (
-    Flask, abort, g, redirect, render_template, request, session, url_for,
+    Flask, Response, abort, g, redirect, render_template, request, session, url_for,
 )
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import calculations
+import export
 import database
 import filters
 import ratelimit
@@ -311,6 +312,42 @@ def create_app(db_file=None, secret_key=None, csrf=True):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "same-origin"
         return response
+
+    @app.route("/export.csv")
+    @login_required
+    def export_csv():
+        rows = database.get_all_transactions(get_db(), g.user[0])
+        return Response(
+            export.transactions_to_csv(rows),
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=transactions.csv"},
+        )
+
+    @app.route("/account")
+    @login_required
+    def account():
+        return render_template("account.html", errors=[])
+
+    @app.route("/account/delete", methods=["POST"])
+    @login_required
+    def delete_account():
+        db = get_db()
+        email = g.user[1]
+        ip = request.remote_addr or "unknown"
+
+        if ratelimit.is_locked_out(db, email, ip):
+            return render_template(
+                "account.html",
+                errors=["Too many failed attempts. Please wait 15 minutes and try again."],
+            ), 429
+
+        if users.authenticate(db, email, request.form.get("password", "")) is None:
+            ratelimit.record_failure(db, email, ip)
+            return render_template("account.html", errors=["Incorrect password."]), 400
+
+        database.delete_user_data(db, g.user[0], email)
+        session.clear()
+        return redirect(url_for("login"))
 
     @app.errorhandler(400)
     @app.errorhandler(404)

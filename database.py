@@ -156,3 +156,21 @@ def delete_user_data(connection, user_id, email):
         connection.rollback()
         raise
     return removed
+
+def delete_user_data(connection, user_id, email):
+    """Delete a user's transactions, login failures and account in one transaction.
+
+    Returns the number of transactions removed.
+    """
+    try:
+        cursor = connection.execute(
+            "DELETE FROM transactions WHERE user_id = ?", (user_id,)
+        )
+        removed = cursor.rowcount
+        connection.execute("DELETE FROM login_failures WHERE email = ?", (email,))
+        connection.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    return removed
