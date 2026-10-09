@@ -2,26 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}Finance Tracker{% endblock %} - Finance Tracker</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="site-header">
-    <div class="container header-inner">
-      <div class="header-top">
-        <a class="brand" href="{{ url_for('dashboard') }}">Finance Tracker</a>
+    <div class="container header-bar">
+      <a class="brand" href="{{ url_for('dashboard') }}">Finance Tracker</a>
 
-        {% if g.user %}
-        <details class="user-menu">
-          <summary class="user-icon" aria-label="Account menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path>
-            </svg>
+      {% if g.user %}
+      <nav class="nav">
+        <a href="{{ url_for('dashboard') }}"
+           {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+        <a href="{{ url_for('transactions_page') }}"
+           {% if request.endpoint in ('transactions_page', 'edit_transaction') %}class="active"{% endif %}>Transactions</a>
+        <a href="{{ url_for('breakdown') }}"
+           {% if request.endpoint == 'breakdown' %}class="active"{% endif %}>Breakdown</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn btn-primary add-btn" href="{{ url_for('new_transaction') }}">+ Add</a>
+
+        <details class="user-chip">
+          <summary aria-label="Account menu">
+            <span class="avatar">{{ g.user[1][0] | upper }}</span>
+            <span class="chip-name">{{ g.user[1].split('@')[0] }}</span>
           </summary>
-          <div class="user-menu-panel">
+          <div class="user-panel">
             <span class="nav-user" title="{{ g.user[1] }}">{{ g.user[1] }}</span>
             <a href="{{ url_for('account') }}">Account</a>
             <form class="inline-form" method="post" action="{{ url_for('logout') }}">
@@ -30,34 +38,13 @@
             </form>
           </div>
         </details>
-        {% endif %}
       </div>
-
-      <nav class="nav">
-        {% if g.user %}
-        <a href="{{ url_for('dashboard') }}"
-           {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
-        <a href="{{ url_for('transactions_page') }}"
-           {% if request.endpoint in ('transactions_page', 'edit_transaction') %}class="active"{% endif %}>Transactions</a>
-        <a href="{{ url_for('breakdown') }}"
-           {% if request.endpoint == 'breakdown' %}class="active"{% endif %}>Breakdown</a>
-        <a class="nav-action" href="{{ url_for('new_transaction') }}">+ Add</a>
-
-        <div class="desktop-account">
-          <a href="{{ url_for('account') }}"
-             {% if request.endpoint == 'account' %}class="active"{% endif %}>Account</a>
-          <span class="nav-user" title="{{ g.user[1] }}">{{ g.user[1] }}</span>
-          <form class="inline-form" method="post" action="{{ url_for('logout') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-small" type="submit">Log out</button>
-          </form>
-        </div>
-        {% else %}
-        <a href="{{ url_for('login') }}"
-           {% if request.endpoint == 'login' %}class="active"{% endif %}>Log in</a>
-        <a class="nav-action" href="{{ url_for('register') }}">Create account</a>
-        {% endif %}
-      </nav>
+      {% else %}
+      <div class="header-actions">
+        <a class="header-link" href="{{ url_for('login') }}">Log in</a>
+        <a class="btn btn-primary" href="{{ url_for('register') }}">Create account</a>
+      </div>
+      {% endif %}
     </div>
   </header>
 
@@ -68,5 +55,28 @@
   <footer class="container site-footer">
     <a href="{{ url_for('privacy') }}">Privacy and your data</a>
   </footer>
+
+  {% if g.user %}
+  <nav class="tabbar" aria-label="Main">
+    <a href="{{ url_for('dashboard') }}"
+       {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      <span>Home</span></a>
+    <a href="{{ url_for('transactions_page') }}"
+       {% if request.endpoint in ('transactions_page', 'edit_transaction') %}class="active"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      <span>Activity</span></a>
+    <a class="tab-add" href="{{ url_for('new_transaction') }}" aria-label="Add transaction">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+    <a href="{{ url_for('breakdown') }}"
+       {% if request.endpoint == 'breakdown' %}class="active"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9v9z"/></svg>
+      <span>Spending</span></a>
+    <a href="{{ url_for('account') }}"
+       {% if request.endpoint == 'account' %}class="active"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span>Account</span></a>
+  </nav>
+  {% endif %}
 </body>
 </html>
